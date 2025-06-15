@@ -7,7 +7,17 @@
 ![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?logo=codecov)
 ![Python](https://img.shields.io/badge/python->=3.10-blue?logo=python)
 
+## Getting Started
 
+### Who is this for?
+
+You want to upload data to AIND's Cloud Storage platform on AWS.
+
+### Prerequisites
+
+- Recommend to pip install from PyPI into a conda environment or venv.
+- `aws cli`
+- Authentication for write permissions to aind-open-data bucket. Please reach to AIND Scientific Computing for access.
 
 ## Usage
  - To use this template, click the green `Use this template` button and `Create new repository`.
