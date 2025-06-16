@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import platform
 import subprocess
 from datetime import datetime, timedelta
 from functools import cached_property
@@ -116,10 +117,14 @@ class UploadDataJob:
         dry_run : bool
 
         """
+        if platform.system() == "Windows":
+            shell = True
+        else:
+            shell = False
         command = ["aws", "s3", "sync", f"'{src_folder}'", f"'{s3_location}'"]
         if dry_run:
             command.append("--dryrun")
-        subprocess.run(command, check=True)
+        subprocess.run(command, check=True, shell=shell)
 
     def _upload_directory_data(self):
         """Upload data task."""

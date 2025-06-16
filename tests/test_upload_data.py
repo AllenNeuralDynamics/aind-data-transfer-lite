@@ -54,9 +54,9 @@ class TestUploadDataJob(unittest.TestCase):
         mock_boto.return_value.__enter__.return_value = mock_client
         self.job._check_s3_location()
         mock_list_objects_v2.assert_called_once_with(
-            Bucket='aind-private-data-dev-u5u0i5',
-            Prefix='625100_2022-02-21_16-30-01',
-            MaxKeys=1
+            Bucket="aind-private-data-dev-u5u0i5",
+            Prefix="625100_2022-02-21_16-30-01",
+            MaxKeys=1,
         )
 
     @patch("boto3.client")
@@ -74,12 +74,12 @@ class TestUploadDataJob(unittest.TestCase):
                 "s3://aind-private-data-dev-u5u0i5/625100_2022-02-21_16-30-01"
                 " already exists! Please contact a data admin for help."
             ),
-            str(e.exception)
+            str(e.exception),
         )
         mock_list_objects_v2.assert_called_once_with(
-            Bucket='aind-private-data-dev-u5u0i5',
-            Prefix='625100_2022-02-21_16-30-01',
-            MaxKeys=1
+            Bucket="aind-private-data-dev-u5u0i5",
+            Prefix="625100_2022-02-21_16-30-01",
+            MaxKeys=1,
         )
 
     def test_check_metadata_files(self):
@@ -140,9 +140,13 @@ class TestUploadDataJob(unittest.TestCase):
             str(e.exception),
         )
 
+    @patch("platform.system")
     @patch("subprocess.run")
-    def test_run_s3_sync_command(self, mock_subprocess_run: MagicMock):
+    def test_run_s3_sync_command(
+        self, mock_subprocess_run: MagicMock, mock_platform: MagicMock
+    ):
         """Tests _run_s3_sync_command."""
+        mock_platform.return_value = "Linux"
         self.job._run_s3_sync_command(
             src_folder="local_folder",
             s3_location="s3://bucket/prefix",
@@ -158,10 +162,39 @@ class TestUploadDataJob(unittest.TestCase):
                 "--dryrun",
             ],
             check=True,
+            shell=False,
         )
 
+    @patch("platform.system")
     @patch("subprocess.run")
-    def test_upload_data(self, mock_subprocess_run: MagicMock):
+    def test_run_s3_sync_command_windows(
+        self, mock_subprocess_run: MagicMock, mock_platform: MagicMock
+    ):
+        """Tests _run_s3_sync_command on Windows."""
+        mock_platform.return_value = "Windows"
+        self.job._run_s3_sync_command(
+            src_folder="local_folder",
+            s3_location="s3://bucket/prefix",
+            dry_run=True,
+        )
+        mock_subprocess_run.assert_called_once_with(
+            [
+                "aws",
+                "s3",
+                "sync",
+                "'local_folder'",
+                "'s3://bucket/prefix'",
+                "--dryrun",
+            ],
+            check=True,
+            shell=True,
+        )
+
+    @patch(
+        "aind_data_transfer_lite.upload_data.UploadDataJob"
+        "._run_s3_sync_command"
+    )
+    def test_upload_data(self, mock_run_s3_command: MagicMock):
         """Tests _upload_data."""
         with self.assertLogs(level="INFO") as captured:
             self.job._upload_directory_data()
@@ -170,37 +203,19 @@ class TestUploadDataJob(unittest.TestCase):
         )
         expected_subprocess_calls = [
             call(
-                [
-                    "aws",
-                    "s3",
-                    "sync",
-                    f"'{RESOURCES_DIR}/ecephys_data'",
-                    f"'{expected_s3_location}/ecephys'",
-                    "--dryrun",
-                ],
-                check=True,
+                src_folder=str(RESOURCES_DIR / "ecephys_data"),
+                s3_location=f"{expected_s3_location}/ecephys",
+                dry_run=True,
             ),
             call(
-                [
-                    "aws",
-                    "s3",
-                    "sync",
-                    f"'{RESOURCES_DIR}/behavior_data'",
-                    f"'{expected_s3_location}/behavior'",
-                    "--dryrun",
-                ],
-                check=True,
+                src_folder=str(RESOURCES_DIR / "behavior_data"),
+                s3_location=f"{expected_s3_location}/behavior",
+                dry_run=True,
             ),
             call(
-                [
-                    "aws",
-                    "s3",
-                    "sync",
-                    f"'{RESOURCES_DIR}/metadata_dir'",
-                    f"'{expected_s3_location}'",
-                    "--dryrun",
-                ],
-                check=True,
+                src_folder=str(RESOURCES_DIR / "metadata_dir"),
+                s3_location=f"{expected_s3_location}",
+                dry_run=True,
             ),
         ]
         self.assertEqual(
@@ -211,7 +226,7 @@ class TestUploadDataJob(unittest.TestCase):
             captured.output,
         )
         self.assertEqual(
-            expected_subprocess_calls, mock_subprocess_run.mock_calls
+            expected_subprocess_calls, mock_run_s3_command.mock_calls
         )
 
     @patch("boto3.client")

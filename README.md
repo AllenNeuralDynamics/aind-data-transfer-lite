@@ -27,12 +27,12 @@ You want to upload data to AIND's Cloud Storage platform on AWS.
  - The `.github/workflows/test_and_lint.yml` file will run automated tests and style checks every time a Pull Request is opened. If the checks are undesired, the `test_and_lint.yml` can be deleted. The strictness of the code coverage level, etc., can be modified by altering the configurations in the `pyproject.toml` file and the `.flake8` file.
 
 ## Installation
-To use the software, in the root directory, run
+Install directly from PyPI.
 ```bash
-pip install -e .
+pip install aind-data-transfer-lite
 ```
 
-To develop the code, run
+For code development, clone the repo and install as
 ```bash
 pip install -e .[dev]
 ```
