@@ -10,6 +10,7 @@ from functools import cached_property
 from time import time
 
 import boto3
+from contextlib import closing
 from aind_data_schema.core.metadata import (
     CORE_FILES,
     REQUIRED_FILE_SETS,
@@ -65,9 +66,12 @@ class UploadDataJob:
         FileExistsError
 
         """
+
+        logging.info("Checking S3 Location")
+
         bucket = self.job_settings.s3_bucket
         prefix = self.s3_prefix
-        with boto3.client("s3") as s3_client:
+        with closing(boto3.client("s3")) as s3_client:
             results = s3_client.list_objects_v2(
                 Bucket=bucket,
                 Prefix=prefix,
@@ -82,7 +86,7 @@ class UploadDataJob:
     def _check_metadata_files(self):
         """Checks required metadata files are present."""
 
-        logging.info("Checking metadata directory.")
+        logging.info("Checking metadata directory")
 
         metadata_file_names = os.listdir(self.job_settings.metadata_directory)
         metadata_files = [m.replace(".json", "") for m in metadata_file_names]
@@ -121,7 +125,7 @@ class UploadDataJob:
             shell = True
         else:
             shell = False
-        command = ["aws", "s3", "sync", f"'{src_folder}'", f"'{s3_location}'"]
+        command = ["aws", "s3", "sync", src_folder, s3_location]
         if dry_run:
             command.append("--dryrun")
         subprocess.run(command, check=True, shell=shell)
@@ -129,10 +133,10 @@ class UploadDataJob:
     def _upload_directory_data(self):
         """Upload data task."""
 
-        logging.info("Uploading modality data.")
+        logging.info("Uploading Modality Data")
         for modality, path in self.job_settings.modality_directories.items():
             s3_location = f"{self.s3_root_location}/{modality}"
-            src_folder = f"{path}"
+            src_folder = str(path)
             self._run_s3_sync_command(
                 src_folder=src_folder,
                 s3_location=s3_location,
@@ -163,15 +167,29 @@ class UploadDataJob:
             location=self.s3_root_location,
             core_jsons=core_jsons,
         )
-        object_key = f"{self.s3_root_location}/metadata.nd.json"
-        with boto3.client("s3") as s3_client:
-            s3_client.put_object(
-                Bucket=self.job_settings.s3_bucket,
-                Key=object_key,
-                Body=(
-                    bytes(json.dumps(metadata_nd, indent=3).encode("UTF-8"))
-                ),
+        object_key = f"{self.s3_prefix}/metadata.nd.json"
+        contents = json.dumps(
+            metadata_nd,
+            indent=3,
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode("utf-8")
+        if self.job_settings.dry_run:
+            logging.info(
+                f"(dryrun) Uploading metadata.nd.json to"
+                f" {self.s3_root_location}/metadata.nd.json"
             )
+        else:
+            logging.info(
+                f"Uploading metadata.nd.json to"
+                f" {self.s3_root_location}/metadata.nd.json"
+            )
+            with closing(boto3.client("s3")) as s3_client:
+                s3_client.put_object(
+                    Bucket=self.job_settings.s3_bucket,
+                    Key=object_key,
+                    Body=contents,
+                )
 
     def run_job(self):
         """Run job entrypoint."""

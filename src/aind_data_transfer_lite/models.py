@@ -35,7 +35,7 @@ class JobSettings(
 
     # Optional Fields
     dry_run: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Perform a dry run of the upload without uploading any data."
         ),

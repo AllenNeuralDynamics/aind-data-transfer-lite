@@ -20,11 +20,46 @@ You want to upload data to AIND's Cloud Storage platform on AWS.
 - Authentication for write permissions to aind-open-data bucket. Please reach to AIND Scientific Computing for access.
 
 ## Usage
- - To use this template, click the green `Use this template` button and `Create new repository`.
- - After github initially creates the new repository, please wait an extra minute for the initialization scripts to finish organizing the repo.
- - To enable the automatic semantic version increments: in the repository go to `Settings` and `Collaborators and teams`. Click the green `Add people` button. Add `svc-aindscicomp` as an admin. Modify the file in `.github/workflows/tag_and_publish.yml` and remove the if statement in line 65. The semantic version will now be incremented every time a code is committed into the main branch.
- - To publish to PyPI, enable semantic versioning and uncomment the publish block in `.github/workflows/tag_and_publish.yml`. The code will now be published to PyPI every time the code is committed into the main branch.
- - The `.github/workflows/test_and_lint.yml` file will run automated tests and style checks every time a Pull Request is opened. If the checks are undesired, the `test_and_lint.yml` can be deleted. The strictness of the code coverage level, etc., can be modified by altering the configurations in the `pyproject.toml` file and the `.flake8` file.
+
+### Example Python Script
+
+```python
+from pathlib import Path
+import os
+from aind_data_transfer_lite.models import JobSettings
+from aind_data_transfer_lite.upload_data import UploadDataJob
+
+# Assuming running from same directory as this README file
+cwd = os.getcwd()
+behavior_path = Path(cwd) / "tests" / "resources" / "behavior_data"
+ecephys_path = Path(cwd) / "tests" / "resources" / "ecephys_data"
+metadata_path = Path(cwd) / "tests" / "resources" / "metadata_dir"
+
+modality_directories = {
+  "behavior": behavior_path,
+  "ecephys": ecephys_path
+}
+
+metadata_directory = metadata_path
+
+job_settings = JobSettings(
+  dry_run=True,
+  modality_directories=modality_directories,
+  metadata_directory=metadata_directory,
+  s3_bucket="aind-open-data-dev"
+)
+
+job = UploadDataJob(job_settings=job_settings)
+job.run_job()
+```
+
+### Example Command Line (Linux and MacOs)
+```bash
+python -m aind_data_transfer_lite.upload_data \
+--metadata_directory "./tests/resources/metadata_dir" \
+--modality_directories '{"behavior": "./tests/resources/behavior_data", "ecephys": "./tests/resources/ecephys_data"}' \
+--dry_run "True"
+```
 
 ## Installation
 Install directly from PyPI.
