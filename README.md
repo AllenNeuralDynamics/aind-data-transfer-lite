@@ -66,6 +66,14 @@ python -m aind_data_transfer_lite.upload_data \
 --dry_run "True"
 ```
 
+### Example Command Line (PowerShell)
+```bash
+python -m aind_data_transfer_lite.upload_data `
+--metadata_directory "./tests/resources/metadata_dir" `
+--modality_directories '{\"behavior\": \"./tests/resources/behavior_data\", \"ecephys\": \"./tests/resources/ecephys_data\"}' `
+--dry_run "True"
+```
+
 ## Contributing
 
 For code development, clone the repo and install as
