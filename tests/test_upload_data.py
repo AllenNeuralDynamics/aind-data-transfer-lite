@@ -35,12 +35,12 @@ class TestUploadDataJob(unittest.TestCase):
 
     def test_s3_prefix(self):
         """Tests s3_prefix is properly set from data_description."""
-        self.assertEqual("625100_2022-02-21_16-30-01", self.job.s3_prefix)
+        self.assertEqual("12345_2022-02-21_16-30-01", self.job.s3_prefix)
 
     def test_s3_root_location(self):
         """Tests s3_root_location is properly set from data_description."""
         self.assertEqual(
-            "s3://aind-private-data-dev-u5u0i5/625100_2022-02-21_16-30-01",
+            "s3://aind-private-data-dev-u5u0i5/12345_2022-02-21_16-30-01",
             self.job.s3_root_location,
         )
 
@@ -51,13 +51,15 @@ class TestUploadDataJob(unittest.TestCase):
         mock_list_objects_v2.return_value = {"KeyCount": 0}
         mock_client = MagicMock()
         mock_client.list_objects_v2 = mock_list_objects_v2
-        mock_boto.return_value.__enter__.return_value = mock_client
-        self.job._check_s3_location()
+        mock_boto.return_value = mock_client
+        with self.assertLogs(level="INFO") as captured:
+            self.job._check_s3_location()
         mock_list_objects_v2.assert_called_once_with(
             Bucket="aind-private-data-dev-u5u0i5",
-            Prefix="625100_2022-02-21_16-30-01",
+            Prefix="12345_2022-02-21_16-30-01",
             MaxKeys=1,
         )
+        self.assertEqual(["INFO:root:Checking S3 Location"], captured.output)
 
     @patch("boto3.client")
     def test_check_s3_location_exists(self, mock_boto: MagicMock):
@@ -66,28 +68,30 @@ class TestUploadDataJob(unittest.TestCase):
         mock_list_objects_v2.return_value = {"KeyCount": 1}
         mock_client = MagicMock()
         mock_client.list_objects_v2 = mock_list_objects_v2
-        mock_boto.return_value.__enter__.return_value = mock_client
-        with self.assertRaises(FileExistsError) as e:
-            self.job._check_s3_location()
+        mock_boto.return_value = mock_client
+        with self.assertLogs(level="INFO") as captured:
+            with self.assertRaises(FileExistsError) as e:
+                self.job._check_s3_location()
         self.assertIn(
             (
-                "s3://aind-private-data-dev-u5u0i5/625100_2022-02-21_16-30-01"
+                "s3://aind-private-data-dev-u5u0i5/12345_2022-02-21_16-30-01"
                 " already exists! Please contact a data admin for help."
             ),
             str(e.exception),
         )
         mock_list_objects_v2.assert_called_once_with(
             Bucket="aind-private-data-dev-u5u0i5",
-            Prefix="625100_2022-02-21_16-30-01",
+            Prefix="12345_2022-02-21_16-30-01",
             MaxKeys=1,
         )
+        self.assertEqual(["INFO:root:Checking S3 Location"], captured.output)
 
     def test_check_metadata_files(self):
         """Tests _check_metadata_files when all files present."""
         with self.assertLogs(level="INFO") as captured:
             self.job._check_metadata_files()
         self.assertEqual(
-            ["INFO:root:Checking metadata directory."], captured.output
+            ["INFO:root:Checking metadata directory"], captured.output
         )
 
     @patch("os.listdir")
@@ -104,7 +108,7 @@ class TestUploadDataJob(unittest.TestCase):
             with self.assertRaises(Exception) as e:
                 self.job._check_metadata_files()
         self.assertEqual(
-            ["INFO:root:Checking metadata directory."], captured.output
+            ["INFO:root:Checking metadata directory"], captured.output
         )
         self.assertIn(
             (
@@ -130,7 +134,7 @@ class TestUploadDataJob(unittest.TestCase):
             with self.assertRaises(Exception) as e:
                 self.job._check_metadata_files()
         self.assertEqual(
-            ["INFO:root:Checking metadata directory."], captured.output
+            ["INFO:root:Checking metadata directory"], captured.output
         )
         self.assertIn(
             (
@@ -157,8 +161,8 @@ class TestUploadDataJob(unittest.TestCase):
                 "aws",
                 "s3",
                 "sync",
-                "'local_folder'",
-                "'s3://bucket/prefix'",
+                "local_folder",
+                "s3://bucket/prefix",
                 "--dryrun",
             ],
             check=True,
@@ -182,8 +186,8 @@ class TestUploadDataJob(unittest.TestCase):
                 "aws",
                 "s3",
                 "sync",
-                "'local_folder'",
-                "'s3://bucket/prefix'",
+                "local_folder",
+                "s3://bucket/prefix",
                 "--dryrun",
             ],
             check=True,
@@ -199,7 +203,7 @@ class TestUploadDataJob(unittest.TestCase):
         with self.assertLogs(level="INFO") as captured:
             self.job._upload_directory_data()
         expected_s3_location = (
-            "s3://aind-private-data-dev-u5u0i5/625100_2022-02-21_16-30-01"
+            "s3://aind-private-data-dev-u5u0i5/12345_2022-02-21_16-30-01"
         )
         expected_subprocess_calls = [
             call(
@@ -220,8 +224,8 @@ class TestUploadDataJob(unittest.TestCase):
         ]
         self.assertEqual(
             [
-                "INFO:root:Uploading modality data.",
-                "INFO:root:Uploading metadata.",
+                "INFO:root:Uploading Modality Data",
+                "INFO:root:Uploading metadata.nd.json",
             ],
             captured.output,
         )
@@ -230,14 +234,38 @@ class TestUploadDataJob(unittest.TestCase):
         )
 
     @patch("boto3.client")
-    def test_upload_metadata_nd_file(self, mock_boto: MagicMock):
-        """Tests _upload_metadata_nd_file."""
+    def test_upload_metadata_nd_file_dry_run(self, mock_boto: MagicMock):
+        """Tests _upload_metadata_nd_file with dry_run True."""
         mock_put_object = MagicMock()
         mock_client = MagicMock()
         mock_client.put_object = mock_put_object
-        mock_boto.return_value.__enter__.return_value = mock_client
-        with self.assertLogs() as _:
+        mock_boto.return_value = mock_client
+        with self.assertLogs() as captured:
             self.job._upload_metadata_nd_file()
+
+        self.assertEqual(
+            [
+                'INFO:root:(dryrun) Uploading metadata.nd.json to'
+                ' s3://aind-private-data-dev-u5u0i5/'
+                '12345_2022-02-21_16-30-01/metadata.nd.json'
+            ],
+            captured.output
+        )
+        mock_put_object.assert_not_called()
+
+    @patch("boto3.client")
+    def test_upload_metadata_nd_file_no_dry_run(self, mock_boto: MagicMock):
+        """Tests _upload_metadata_nd_file with dry_run False."""
+        job_settings_run = self.job.job_settings.model_copy(
+            update={"dry_run": False}, deep=True
+        )
+        job_run = UploadDataJob(job_settings=job_settings_run)
+        mock_put_object = MagicMock()
+        mock_client = MagicMock()
+        mock_client.put_object = mock_put_object
+        mock_boto.return_value = mock_client
+        with self.assertLogs() as _:
+            job_run._upload_metadata_nd_file()
         mocked_put_object_call_args = mock_put_object.call_args.kwargs
         decoded_body = mocked_put_object_call_args["Body"].decode("UTF-8")
         json_contents_being_uploaded = json.loads(decoded_body)
@@ -248,12 +276,12 @@ class TestUploadDataJob(unittest.TestCase):
         self.assertEqual(
             mocked_put_object_call_args["Key"],
             (
-                "s3://aind-private-data-dev-u5u0i5/625100_2022-02-21_16-30-01/"
+                "12345_2022-02-21_16-30-01/"
                 "metadata.nd.json"
             ),
         )
         self.assertEqual(
-            "625100_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
+            "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
         )
 
     @patch(

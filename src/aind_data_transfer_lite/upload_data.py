@@ -143,7 +143,7 @@ class UploadDataJob:
                 dry_run=self.job_settings.dry_run,
             )
 
-        logging.info("Uploading metadata.")
+        logging.info("Uploading metadata.nd.json")
         src_folder = f"{self.job_settings.metadata_directory}"
         self._run_s3_sync_command(
             src_folder=src_folder,
