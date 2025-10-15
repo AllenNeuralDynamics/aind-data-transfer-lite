@@ -10,18 +10,12 @@
       "strain": {
          "name": "C57BL/6J",
          "species": "Mus musculus",
-         "registry": {
-            "name": "Mouse Genome Informatics",
-            "abbreviation": "MGI"
-         },
+         "registry": "Mouse Genome Informatics (MGI)",
          "registry_identifier": "MGI:3028467"
       },
       "species": {
          "name": "Mus musculus",
-         "registry": {
-            "name": "National Center for Biotechnology Information",
-            "abbreviation": "NCBI"
-         },
+         "registry": "National Center for Biotechnology Information",
          "registry_identifier": "NCBI:txid10090"
       },
       "alleles": [],

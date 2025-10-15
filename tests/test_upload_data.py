@@ -245,11 +245,11 @@ class TestUploadDataJob(unittest.TestCase):
 
         self.assertEqual(
             [
-                'INFO:root:(dryrun) Uploading metadata.nd.json to'
-                ' s3://aind-private-data-dev-u5u0i5/'
-                '12345_2022-02-21_16-30-01/metadata.nd.json'
+                "INFO:root:(dryrun) Uploading metadata.nd.json to"
+                " s3://aind-private-data-dev-u5u0i5/"
+                "12345_2022-02-21_16-30-01/metadata.nd.json"
             ],
-            captured.output
+            captured.output,
         )
         mock_put_object.assert_not_called()
 
@@ -275,10 +275,7 @@ class TestUploadDataJob(unittest.TestCase):
         )
         self.assertEqual(
             mocked_put_object_call_args["Key"],
-            (
-                "12345_2022-02-21_16-30-01/"
-                "metadata.nd.json"
-            ),
+            ("12345_2022-02-21_16-30-01/" "metadata.nd.json"),
         )
         self.assertEqual(
             "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
