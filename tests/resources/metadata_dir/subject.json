@@ -1,7 +1,7 @@
 {
    "object_type": "Subject",
    "describedBy": "https://raw.githubusercontent.com/AllenNeuralDynamics/aind-data-schema/main/src/aind_data_schema/core/subject.py",
-   "schema_version": "2.0.9",
+   "schema_version": "2.0.13",
    "subject_id": "12345",
    "subject_details": {
       "object_type": "Mouse subject",
@@ -15,7 +15,8 @@
       },
       "species": {
          "name": "Mus musculus",
-         "registry": "National Center for Biotechnology Information",
+         "common_name": "House mouse",
+         "registry": "National Center for Biotechnology Information (NCBI)",
          "registry_identifier": "NCBI:txid10090"
       },
       "alleles": [],
@@ -42,10 +43,7 @@
       "source": {
          "name": "Allen Institute",
          "abbreviation": "AI",
-         "registry": {
-            "name": "Research Organization Registry",
-            "abbreviation": "ROR"
-         },
+         "registry": "Research Organization Registry (ROR)",
          "registry_identifier": "03cpe7c52"
       },
       "restrictions": null,

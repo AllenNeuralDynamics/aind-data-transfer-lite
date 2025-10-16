@@ -6,17 +6,7 @@
    "specimen_id": null,
    "acquisition_start_time": "2023-04-25T02:35:00Z",
    "acquisition_end_time": "2023-04-25T03:16:00Z",
-   "experimenters": [
-      {
-         "object_type": "Person",
-         "name": "John Smith",
-         "registry": {
-            "name": "Open Researcher and Contributor ID",
-            "abbreviation": "ORCID"
-         },
-         "registry_identifier": null
-      }
-   ],
+   "experimenters": ["John Smith"],
    "protocol_id": null,
    "ethics_review_id": [
       "2109"

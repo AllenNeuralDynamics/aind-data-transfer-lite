@@ -1,7 +1,7 @@
 {
    "object_type": "Instrument",
    "describedBy": "https://raw.githubusercontent.com/AllenNeuralDynamics/aind-data-schema/main/src/aind_data_schema/core/instrument.py",
-   "schema_version": "2.0.34",
+   "schema_version": "2.0.40",
    "location": "323",
    "instrument_id": "EPHYS1",
    "modification_date": "2023-10-03",
@@ -15,7 +15,7 @@
       {
          "object_type": "Calibration",
          "device_name": "Red Laser",
-         "calibration_date": "2023-10-02T10:22:13Z",
+         "calibration_date": "2023-04-24T10:22:13Z",
          "description": "Laser power calibration",
          "input": [
             10.0,
@@ -23,18 +23,20 @@
             40.0
          ],
          "input_unit": "percent",
+         "repeats": null,
          "output": [
             1.0,
             3.0,
             6.0
          ],
          "output_unit": "milliwatt",
+         "fit": null,
          "notes": null
       },
       {
          "object_type": "Calibration",
          "device_name": "Blue Laser",
-         "calibration_date": "2023-10-02T10:22:13Z",
+         "calibration_date": "2023-04-24T10:22:13Z",
          "description": "Laser power calibration",
          "input": [
             10.0,
@@ -42,12 +44,14 @@
             40.0
          ],
          "input_unit": "percent",
+         "repeats": null,
          "output": [
             1.0,
             2.0,
             7.0
          ],
          "output_unit": "milliwatt",
+         "fit": null,
          "notes": null
       }
    ],
@@ -79,134 +83,91 @@
    "connections": [
       {
          "object_type": "Connection",
-         "device_names": [
-            "Harp Behavior",
-            "Face Camera"
-         ],
-         "connection_data": {
-            "Harp Behavior": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": "DO0"
-            },
-            "Face Camera": {
-               "object_type": "Connection data",
-               "direction": "Receive",
-               "port": null
-            }
-         }
+         "source_device": "Harp Behavior",
+         "source_port": "DO0",
+         "target_device": "Face Camera",
+         "target_port": null,
+         "send_and_receive": false
       },
       {
          "object_type": "Connection",
-         "device_names": [
-            "Harp Behavior",
-            "Body Camera"
-         ],
-         "connection_data": {
-            "Harp Behavior": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": "DO1"
-            },
-            "Body Camera": {
-               "object_type": "Connection data",
-               "direction": "Receive",
-               "port": null
-            }
-         }
+         "source_device": "Harp Behavior",
+         "source_port": "DO1",
+         "target_device": "Body Camera",
+         "target_port": null,
+         "send_and_receive": false
       },
       {
          "object_type": "Connection",
-         "device_names": [
-            "Harp Behavior",
-            "Running Wheel"
-         ],
-         "connection_data": {
-            "Harp Behavior": {
-               "object_type": "Connection data",
-               "direction": "Receive",
-               "port": "AI0"
-            },
-            "Running Wheel": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            }
-         }
+         "source_device": "Running Wheel",
+         "source_port": null,
+         "target_device": "Harp Behavior",
+         "target_port": "AI0",
+         "send_and_receive": false
       },
       {
          "object_type": "Connection",
-         "device_names": [
-            "Harp Behavior",
-            "Face Camera",
-            "Body Camera",
-            "W10DT72941"
-         ],
-         "connection_data": {
-            "Harp Behavior": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "Face Camera": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "Body Camera": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "W10DT72941": {
-               "object_type": "Connection data",
-               "direction": "Receive",
-               "port": null
-            }
-         }
+         "source_device": "Harp Behavior",
+         "source_port": null,
+         "target_device": "W10DT72941",
+         "target_port": null,
+         "send_and_receive": false
       },
       {
          "object_type": "Connection",
-         "device_names": [
-            "W10DT72942",
-            "Basestation Slot 3",
-            "stick microscope 1",
-            "stick microscope 2",
-            "stick microscope 3",
-            "stick microscope 4"
-         ],
-         "connection_data": {
-            "W10DT72942": {
-               "object_type": "Connection data",
-               "direction": "Receive",
-               "port": null
-            },
-            "Basestation Slot 3": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "stick microscope 1": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "stick microscope 2": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "stick microscope 3": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            },
-            "stick microscope 4": {
-               "object_type": "Connection data",
-               "direction": "Send",
-               "port": null
-            }
-         }
+         "source_device": "Face Camera",
+         "source_port": null,
+         "target_device": "W10DT72941",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Body Camera",
+         "source_port": null,
+         "target_device": "W10DT72941",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Basestation Slot 3",
+         "source_port": null,
+         "target_device": "W10DT72942",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "stick microscope 1",
+         "source_port": null,
+         "target_device": "W10DT72942",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "stick microscope 2",
+         "source_port": null,
+         "target_device": "W10DT72942",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "stick microscope 3",
+         "source_port": null,
+         "target_device": "W10DT72942",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "stick microscope 4",
+         "source_port": null,
+         "target_device": "W10DT72942",
+         "target_port": null,
+         "send_and_receive": false
       }
    ],
    "components": [
@@ -288,10 +249,7 @@
             "manufacturer": {
                "name": "Teledyne FLIR",
                "abbreviation": "FLIR",
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -331,10 +289,7 @@
             "manufacturer": {
                "name": "Edmund Optics",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -348,10 +303,7 @@
             "manufacturer": {
                "name": "Thorlabs",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "04gsnvb07"
             },
             "model": null,
@@ -380,10 +332,7 @@
             "manufacturer": {
                "name": "Teledyne FLIR",
                "abbreviation": "FLIR",
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -423,10 +372,7 @@
             "manufacturer": {
                "name": "Edmund Optics",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -440,10 +386,7 @@
             "manufacturer": {
                "name": "Thorlabs",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "04gsnvb07"
             },
             "model": null,
@@ -529,10 +472,7 @@
             "manufacturer": {
                "name": "Doric",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "059n53q30"
             },
             "model": "BBP(4)_200/220/900-0.37_Custom_FCM-4xMF1.25",
@@ -550,10 +490,7 @@
          "manufacturer": {
             "name": "Interuniversity Microelectronics Center",
             "abbreviation": "IMEC",
-            "registry": {
-               "name": "Research Organization Registry",
-               "abbreviation": "ROR"
-            },
+            "registry": "Research Organization Registry (ROR)",
             "registry_identifier": "02kcbn207"
          },
          "model": null,
@@ -590,10 +527,7 @@
          "manufacturer": {
             "name": "Open Ephys Production Site",
             "abbreviation": "OEPS",
-            "registry": {
-               "name": "Research Organization Registry",
-               "abbreviation": "ROR"
-            },
+            "registry": "Research Organization Registry (ROR)",
             "registry_identifier": "007rkz355"
          },
          "model": null,
@@ -658,10 +592,7 @@
             "manufacturer": {
                "name": "Teledyne FLIR",
                "abbreviation": "FLIR",
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -701,10 +632,7 @@
             "manufacturer": {
                "name": "Edmund Optics",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -729,10 +657,7 @@
             "manufacturer": {
                "name": "Teledyne FLIR",
                "abbreviation": "FLIR",
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -772,10 +697,7 @@
             "manufacturer": {
                "name": "Edmund Optics",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -800,10 +722,7 @@
             "manufacturer": {
                "name": "Teledyne FLIR",
                "abbreviation": "FLIR",
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -843,10 +762,7 @@
             "manufacturer": {
                "name": "Edmund Optics",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -871,10 +787,7 @@
             "manufacturer": {
                "name": "Teledyne FLIR",
                "abbreviation": "FLIR",
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
@@ -914,10 +827,7 @@
             "manufacturer": {
                "name": "Edmund Optics",
                "abbreviation": null,
-               "registry": {
-                  "name": "Research Organization Registry",
-                  "abbreviation": "ROR"
-               },
+               "registry": "Research Organization Registry (ROR)",
                "registry_identifier": "01j1gwp17"
             },
             "model": null,
