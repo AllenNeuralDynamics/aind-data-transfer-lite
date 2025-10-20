@@ -5,12 +5,12 @@ import logging
 import os
 import platform
 import subprocess
+from contextlib import closing
 from datetime import datetime, timedelta
 from functools import cached_property
 from time import time
 
 import boto3
-from contextlib import closing
 from aind_data_schema.core.metadata import (
     CORE_FILES,
     REQUIRED_FILE_SETS,
