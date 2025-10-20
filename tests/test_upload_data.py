@@ -275,7 +275,7 @@ class TestUploadDataJob(unittest.TestCase):
         )
         self.assertEqual(
             mocked_put_object_call_args["Key"],
-            ("12345_2022-02-21_16-30-01/" "metadata.nd.json"),
+            "12345_2022-02-21_16-30-01/metadata.nd.json",
         )
         self.assertEqual(
             "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
