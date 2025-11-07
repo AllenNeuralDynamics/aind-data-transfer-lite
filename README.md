@@ -14,9 +14,7 @@
 You want to upload data to AIND's Cloud Storage platform on AWS.
 
 ### Prerequisites
-
-- Install [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-- Authentication for write permissions to aind-open-data bucket. Please reach to AIND Scientific Computing for access.
+- Authentication for write permissions to aind-open-data bucket. Please reach out to AIND Scientific Computing for access.
 
 ## Installation
 Install directly from PyPI. We recommend installing into a virtual environment or conda environment.
