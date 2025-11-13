@@ -12,14 +12,11 @@ from aind_data_transfer_lite.ui import DataTransferLiteUI, main
 class TestDataTransferLiteUI(unittest.TestCase):
     """Tests for DataTransferLiteUI class and its main launcher."""
 
-    @classmethod  # pragma: no cover
+    @classmethod
     def setUpClass(cls) -> None:
         """Ensure a QApplication exists once for all tests."""
         app_instance = QApplication.instance()
-        if app_instance is None:
-            cls.app = QApplication([])
-        else:
-            cls.app = app_instance
+        cls.app = app_instance
 
     def test_ui_initialization(self):
         """Test that UI should initialize with a hello_label
