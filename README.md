@@ -14,7 +14,7 @@
 You want to upload data to AIND's Cloud Storage platform on AWS.
 
 ### Prerequisites
-- Authentication for write permissions to aind-open-data bucket. Please reach out to AIND Scientific Computing for access.
+Authentication for write permissions to aind-open-data bucket. Please reach out to AIND Scientific Computing for access.
 
 ## Installation
 Install directly from PyPI. We recommend installing into a virtual environment or conda environment.
@@ -23,6 +23,29 @@ pip install aind-data-transfer-lite
 ```
 
 ## Usage
+
+You can interact with AIND Data Transfer Lite in two ways:
+
+1. Launch the GUI window for visual interaction.
+2. Run Python scripts or the command-line interface to perform data uploads programmatically.
+
+### Launching the UI
+
+- Ensure dependencies are installed.
+
+- Either:
+  - Open the file `src/aind_data_transfer_lite/ui.py` in VS Code and click "Run" in the upper right-hand corner.
+
+  - Or run the following in the terminal:
+    ```bash
+    python -m aind_data_transfer_lite.ui
+    ```
+
+- You should see a small window titled "Data Transfer Lite UI" appear.
+
+<p align="center">
+  <img src="image.png" alt="Example GUI window">
+</p>
 
 ### Example Python Script
 
