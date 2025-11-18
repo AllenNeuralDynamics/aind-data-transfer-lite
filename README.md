@@ -44,7 +44,7 @@ You can interact with AIND Data Transfer Lite in two ways:
 - You should see a small window titled "Data Transfer Lite UI" appear.
 
 <p align="center">
-  <img src="image.png" alt="Example GUI window">
+  <img src="docs/examples/expected_ui_popup.png" alt="Expected UI popup" />
 </p>
 
 ### Example Python Script
