@@ -1,3 +1,5 @@
+"""JobSettings GUI form."""
+
 from pathlib import Path
 from typing import get_origin
 
@@ -9,7 +11,10 @@ from pydantic import DirectoryPath
 
 @magicclass(layout="vertical", labels=True)
 class JobSettingsForm:
+    """Form for editing JobSettings."""
+
     def __init__(self):
+        """Initialize the JobSettings form and create all UI elements."""
         self.field_widgets = {}
 
         # -------------------------------
@@ -75,6 +80,8 @@ class JobSettingsForm:
     # Modality row (buttons only)
     # -------------------------------
     def _make_modality_row(self):
+        """Creates a single modality row with dropdown, directory picker, and delete button.
+        """
         dropdown = widgets.ComboBox(
             label="Modality",
             choices=JobSettings._modality_abbreviations,
