@@ -1,10 +1,11 @@
-from magicclass import magicclass
-from magicgui import widgets
-from qtpy import QtWidgets
 from pathlib import Path
 from typing import get_origin
+
+from magicclass import magicclass
+from magicgui import widgets
 from models import JobSettings
 from pydantic import DirectoryPath
+
 
 @magicclass(layout="vertical", labels=True)
 class JobSettingsForm:
