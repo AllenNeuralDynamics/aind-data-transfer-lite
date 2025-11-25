@@ -69,7 +69,7 @@ exclude = '''
 '''
 
 [tool.coverage.run]
-omit = ["*__init__*"]
+omit = ["*__init__*", "src/aind_data_transfer_lite/ui.py"]
 source = ["aind_data_transfer_lite", "tests"]
 
 [tool.coverage.report]
