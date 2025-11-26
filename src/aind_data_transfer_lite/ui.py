@@ -5,7 +5,7 @@ from typing import get_origin
 
 from magicclass import magicclass
 from magicgui import widgets
-from pydantic import DirectoryPath
+from pydantic import DirectoryPath, ValidationError
 from qtpy import QtWidgets
 
 from aind_data_transfer_lite.models import JobSettings
@@ -30,7 +30,6 @@ class JobSettingsForm:
             if not field.is_required():
                 label += " (Optional)"
 
-            # Safe type check for DirectoryPath / Path
             origin = get_origin(field.annotation)
             if origin is None and field.annotation in (DirectoryPath, Path):
                 widget = widgets.FileEdit(label=label, mode="d")
@@ -42,9 +41,6 @@ class JobSettingsForm:
                 continue  # unsupported type
 
             self.field_widgets[name] = widget
-            # Disable tooltips to prevent showing docstring as fallback
-            widget.native.setToolTip("")
-
 
         # -------------------------------
         # Modality UI
@@ -70,6 +66,10 @@ class JobSettingsForm:
         self.output_box.native.setReadOnly(True)
         self.append(self.output_box)
 
+        self.validate_btn = widgets.PushButton(text="Validate")
+        self.append(self.validate_btn)
+        self.validate_btn.clicked.connect(self._validate_inputs)
+
         self.copy_btn = widgets.PushButton(text="Copy Input")
         self.append(self.copy_btn)
         self.copy_btn.clicked.connect(self._copy_output)
@@ -84,14 +84,9 @@ class JobSettingsForm:
     # -------------------------------
     # Modality row (buttons only)
     # -------------------------------
-    def _add_modality_row(self):
-        """Append a new modality row to the modality container."""
-        self.modality_container.append(self._make_modality_row())
-
     def _make_modality_row(self):
         """Creates a single modality row with dropdown, directory picker,
-        and delete button.
-        """
+        and delete button."""
         dropdown = widgets.ComboBox(
             label="Modality",
             choices=JobSettings._modality_abbreviations,
@@ -99,29 +94,101 @@ class JobSettingsForm:
         picker = widgets.FileEdit(label="Directory", mode="d")
         delete_btn = widgets.PushButton(text="Delete")
 
+        # Create the row
         row = widgets.Container(
             widgets=[dropdown, picker, delete_btn],
             layout="horizontal",
         )
 
-        # Connect delete to row-specific handler
+        # Delete the row
         delete_btn.clicked.connect(lambda: self._delete_modality_row(row))
 
         return row
+
+    # -------------------------------
+    # Validation logic
+    # -------------------------------
+    def _validate_inputs(self):
+        """Validate the form inputs using the real JobSettings model."""
+        modality_rows = [
+            w
+            for w in self.modality_container
+            if isinstance(w, widgets.Container)
+        ]
+        modality_dict = {}
+        for row in modality_rows:
+            modality_type = row[0].value
+            modality_dir = row[1].value
+            if modality_dir and str(modality_dir) != ".":
+                modality_dict[modality_type] = modality_dir
+
+        # Collect other field values
+        field_values = {
+            name: widget.value for name, widget in self.field_widgets.items()
+        }
+        field_values["modality_directories"] = modality_dict
+
+        # Basic checks
+        missing_fields = []
+        if not modality_dict:
+            missing_fields.append("modality directory")
+        if not field_values.get("metadata_directory"):
+            missing_fields.append("metadata directory")
+
+        if missing_fields:
+            if len(missing_fields) == 1:
+                msg = f"Error: At least one {missing_fields[0]} is required."
+            else:
+                msg = (
+                    "Error: At least one "
+                    + " and ".join(missing_fields)
+                    + " are required."
+                )
+            self.output_box.value = msg
+            self._validation_passed = False
+            return
+
+        # Pydantic validation
+        try:
+            job_settings = JobSettings(**field_values)
+            self.output_box.value = (
+                "Validation successful!\n"
+                + job_settings.model_dump_json(indent=2)
+            )
+            self._validation_passed = True
+        except (ValidationError, KeyError) as e:
+            self.output_box.value = f"Validation failed:\n{e}"
+            self._validation_passed = False
+
+    # -------------------------------
+    # Modality row addition
+    # -------------------------------
+    def _add_modality_row(self):
+        """Append a new modality row to the modality container."""
+        self.modality_container.append(self._make_modality_row())
+
+    # -------------------------------
+    # Modality row deletion
+    # -------------------------------
     def _delete_modality_row(self, row):
         """Delete a modality row unless it's the last remaining row."""
         if len(self.modality_container) <= 1:
-            return  # Prevent deleting the final row
+            return
         self.modality_container.remove(row)
 
+    # -------------------------------
+    # Copy output button
+    # -------------------------------
     def _copy_output(self):
         """Copy the current output box contents to the system clipboard."""
-        text = self.output_box.value or "" # fallback to empty string
+        text = self.output_box.value or ""
         QtWidgets.QApplication.clipboard().setText(text)
 
+    # -------------------------------
+    # Clear form button
+    # -------------------------------
     def _clear_form(self):
         """Reset the form to default values."""
-        # Reset autogenerated fields
         for name, field in JobSettings.model_fields.items():
             if name == "modality_directories":
                 continue
@@ -133,12 +200,10 @@ class JobSettingsForm:
             elif field.annotation is str:
                 widget.value = field.default
 
-        # Reset modality container to a single default row
         self.modality_container.clear()
         self.modality_container.append(self._make_modality_row())
-
-        # Clear output box
         self.output_box.value = ""
+
 
 if __name__ == "__main__":
     gui = JobSettingsForm()
