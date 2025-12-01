@@ -9,6 +9,7 @@ from pydantic import DirectoryPath, ValidationError
 from qtpy import QtWidgets
 
 from aind_data_transfer_lite.models import JobSettings
+from aind_data_transfer_lite.upload_data import UploadDataJob
 
 
 @magicclass(layout="vertical", labels=True)
@@ -76,6 +77,7 @@ class JobSettingsForm:
 
         self.submit_btn = widgets.PushButton(text="Submit")
         self.append(self.submit_btn)
+        self.submit_btn.clicked.connect(self._submit_job)
 
         self.clear_btn = widgets.PushButton(text="Clear")
         self.append(self.clear_btn)
@@ -112,7 +114,8 @@ class JobSettingsForm:
         """Validate the form inputs using the real JobSettings model."""
 
         def normalize(v):
-            """Convert a path string to Path object; treat empty or '.' as None."""
+            """Convert a path string to Path object; treat
+                empty or '.' as None."""
             if not v or str(v) == ".":
                 return None
             return Path(v)
@@ -149,10 +152,12 @@ class JobSettingsForm:
             # Make errors more user-friendly
             messages = []
             for err in e.errors():
-                loc = ".".join(str(l) for l in err["loc"])
+                loc = ".".join(str(part) for part in err["loc"])
                 msg = err["msg"]
                 messages.append(f"{loc}: {msg}")
-            self.output_box.value = "Validation failed:\n\n" + "\n".join(messages)
+            self.output_box.value = "Validation failed:\n\n" + "\n".join(
+                messages
+            )
             self._validation_passed = False
         except Exception as e:
             # Catch any other unexpected errors
@@ -206,8 +211,87 @@ class JobSettingsForm:
         # Reset validation flag
         self._validation_passed = False
 
+    # -------------------------------
+    # Submit job button
+    # -------------------------------
+    def _submit_job(self):
+        """Start a job upload using the current form values."""
+        # Ensure the form has been validated first
+        if not getattr(self, "_validation_passed", False):
+            self.output_box.value = (
+                "Please validate the form before submitting."
+            )
+            return
+
+        # Helper to normalize paths
+        def normalize(v):
+            """Convert a path string to Path object; treat
+                empty or '.' as None."""
+            if not v or str(v) == ".":
+                return None
+            return Path(v)
+
+        # Assemble modality directories
+        modality_dict = {}
+        for row in self.modality_container:
+            if not isinstance(row, widgets.Container):
+                continue
+            modality = row[0].value
+            directory = normalize(row[1].value)
+            modality_dict[modality] = directory
+
+        # Metadata directory
+        metadata_dir = normalize(
+            self.field_widgets["metadata_directory"].value
+        )
+
+        # Dry run flag
+        dry_run = bool(
+            self.field_widgets.get("dry_run", widgets.CheckBox()).value
+        )
+
+        # S3 bucket from UI
+        s3_bucket = self.field_widgets["s3_bucket"].value
+
+        # Create JobSettings
+        try:
+            job_settings = JobSettings(
+                dry_run=dry_run,
+                modality_directories=modality_dict,
+                metadata_directory=metadata_dir,
+                s3_bucket=s3_bucket,
+            )
+
+            # Run the upload job
+            job = UploadDataJob(job_settings=job_settings)
+            job.run_job()
+            if dry_run:
+                self.output_box.value = (
+                    "Dry-run complete. No files were uploaded.\n\n"
+                    f"The job would have uploaded to:\n{job.s3_root_location}"
+                )
+            else:
+                self.output_box.value = (
+                    f"Upload job completed successfully to "
+                    f"{job.s3_root_location}."
+                )
+
+        except ValidationError as e:
+            messages = []
+            for err in e.errors():
+                loc = ".".join(str(part) for part in err["loc"])
+                msg = err["msg"]
+                messages.append(f"{loc}: {msg}")
+            self.output_box.value = (
+                "Job submission failed validation:\n\n" + "\n".join(messages)
+            )
+
+        except Exception as e:
+            self.output_box.value = f"Unknown error: {repr(e)}"
+
 
 if __name__ == "__main__":
+
     gui = JobSettingsForm()
     gui.native.setWindowTitle("AIND Data Transfer Lite")
     gui.show(run=True)
