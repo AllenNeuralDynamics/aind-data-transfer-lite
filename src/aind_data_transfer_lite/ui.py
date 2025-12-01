@@ -140,7 +140,7 @@ class JobSettingsForm:
 
         # Pydantic validation
         try:
-            settings = JobSettings(**field_values)
+            settings = JobSettings.model_validate(field_values)
             self.output_box.value = (
                 "Validation successful!\n" + settings.model_dump_json(indent=2)
             )
@@ -153,6 +153,10 @@ class JobSettingsForm:
                 msg = err["msg"]
                 messages.append(f"{loc}: {msg}")
             self.output_box.value = "Validation failed:\n\n" + "\n".join(messages)
+            self._validation_passed = False
+        except Exception as e:
+            # Catch any other unexpected errors
+            self.output_box.value = f"Unknown error: {repr(e)}"
             self._validation_passed = False
 
     # -------------------------------
