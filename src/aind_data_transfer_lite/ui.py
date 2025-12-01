@@ -70,7 +70,7 @@ class JobSettingsForm:
         self.append(self.validate_btn)
         self.validate_btn.clicked.connect(self._validate_inputs)
 
-        self.copy_btn = widgets.PushButton(text="Copy Input")
+        self.copy_btn = widgets.PushButton(text="Copy Output")
         self.append(self.copy_btn)
         self.copy_btn.clicked.connect(self._copy_output)
 
@@ -110,54 +110,49 @@ class JobSettingsForm:
     # -------------------------------
     def _validate_inputs(self):
         """Validate the form inputs using the real JobSettings model."""
-        modality_rows = [
-            w
-            for w in self.modality_container
-            if isinstance(w, widgets.Container)
-        ]
+
+        def normalize(v):
+            """Convert a path string to Path object; treat empty or '.' as None."""
+            if not v or str(v) == ".":
+                return None
+            return Path(v)
+
+        # Assemble modality_directory values
         modality_dict = {}
-        for row in modality_rows:
-            modality_type = row[0].value
-            modality_dir = row[1].value
-            if modality_dir and str(modality_dir) != ".":
-                modality_dict[modality_type] = modality_dir
+        for row in self.modality_container:
+            if not isinstance(row, widgets.Container):
+                continue
+            m = row[0].value
+            d = normalize(row[1].value)
+            modality_dict[m] = d
 
-        # Collect other field values
-        field_values = {
-            name: widget.value for name, widget in self.field_widgets.items()
-        }
-        field_values["modality_directories"] = modality_dict
-
-        # Basic checks
-        missing_fields = []
-        if not modality_dict:
-            missing_fields.append("modality directory")
-        if not field_values.get("metadata_directory"):
-            missing_fields.append("metadata directory")
-
-        if missing_fields:
-            if len(missing_fields) == 1:
-                msg = f"Error: At least one {missing_fields[0]} is required."
+        # Assemble rest of field values
+        field_values = {}
+        for name, widget in self.field_widgets.items():
+            field = JobSettings.model_fields[name]
+            if field.annotation in (DirectoryPath, Path):
+                val = normalize(widget.value)
             else:
-                msg = (
-                    "Error: At least one "
-                    + " and ".join(missing_fields)
-                    + " are required."
-                )
-            self.output_box.value = msg
-            self._validation_passed = False
-            return
+                val = widget.value
+            field_values[name] = val
+
+        field_values["modality_directories"] = modality_dict
 
         # Pydantic validation
         try:
-            job_settings = JobSettings(**field_values)
+            settings = JobSettings(**field_values)
             self.output_box.value = (
-                "Validation successful!\n"
-                + job_settings.model_dump_json(indent=2)
+                "Validation successful!\n" + settings.model_dump_json(indent=2)
             )
             self._validation_passed = True
-        except (ValidationError, KeyError) as e:
-            self.output_box.value = f"Validation failed:\n{e}"
+        except ValidationError as e:
+            # Make errors more user-friendly
+            messages = []
+            for err in e.errors():
+                loc = ".".join(str(l) for l in err["loc"])
+                msg = err["msg"]
+                messages.append(f"{loc}: {msg}")
+            self.output_box.value = "Validation failed:\n\n" + "\n".join(messages)
             self._validation_passed = False
 
     # -------------------------------
@@ -203,6 +198,9 @@ class JobSettingsForm:
         self.modality_container.clear()
         self.modality_container.append(self._make_modality_row())
         self.output_box.value = ""
+
+        # Reset validation flag
+        self._validation_passed = False
 
 
 if __name__ == "__main__":
