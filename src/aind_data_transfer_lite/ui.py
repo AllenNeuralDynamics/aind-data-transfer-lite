@@ -170,7 +170,7 @@ class JobSettingsForm:
 
         except ValidationError as e:
             errors = "\n".join(
-                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}"
+                f"{'.'.join(str(part) for part in err['loc'])}: {err['msg']}"
                 for err in e.errors()
             )
             self.output_box.value = "Validation failed:\n\n" + errors
@@ -241,7 +241,7 @@ class JobSettingsForm:
 
         except ValidationError as e:
             errors = "\n".join(
-                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}"
+                f"{'.'.join(str(part) for part in err['loc'])}: {err['msg']}"
                 for err in e.errors()
             )
             self.output_box.value = (
