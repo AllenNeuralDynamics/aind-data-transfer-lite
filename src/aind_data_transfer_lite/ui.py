@@ -47,7 +47,7 @@ class JobSettingsForm:
         # Modality UI
         # -------------------------------
         self.modality_container = widgets.Container(layout="vertical")
-        self.modality_container.append(self._make_modality_row())
+        self.modality_container.append(self._modality_row_ui())
         self.append(self.modality_container)
 
         self.add_modality_btn = widgets.PushButton(text="Add Modality")
@@ -84,14 +84,60 @@ class JobSettingsForm:
         self.clear_btn.clicked.connect(self._clear_form)
 
     # -------------------------------
+    # Helper functions
+    # -------------------------------
+    def _normalize_path(self, value):
+        """Convert empty, None, or '.' to None; else return a Path."""
+        if not value or str(value) == ".":
+            return None
+        return Path(value)
+
+    def _collect_modality_directories(self):
+        """Return dict of modality → directory from UI rows."""
+        modality_dict = {}
+        for row in self.modality_container:
+            if isinstance(row, widgets.Container):
+                modality = row[0].value
+                directory = self._normalize_path(row[1].value)
+                modality_dict[modality] = directory
+        return modality_dict
+
+    def _collect_field_values(self):
+        """Return dict of all non-modality JobSettings fields."""
+        values = {}
+        for name, widget in self.field_widgets.items():
+            field = JobSettings.model_fields[name]
+            if field.annotation in (DirectoryPath, Path):
+                values[name] = self._normalize_path(widget.value)
+            else:
+                values[name] = widget.value
+        return values
+
+    def _assemble_submit_payload(self):
+        """Collect all form values into a payload for JobSettings."""
+        data = self._collect_field_values()
+        data["modality_directories"] = self._collect_modality_directories()
+        return data
+
+    def _run_upload_job(self, job_settings):
+        """Run the upload job and return a string message."""
+        job = UploadDataJob(job_settings=job_settings)
+        job.run_job()
+        if job_settings.dry_run:
+            return (
+                "Dry-run complete. No files were uploaded.\n\n"
+                f"The job would have uploaded to:\n{job.s3_root_location}"
+            )
+        return f"Upload job completed successfully to {job.s3_root_location}."
+
+    # -------------------------------
     # Modality row (buttons only)
     # -------------------------------
-    def _make_modality_row(self):
+    def _modality_row_ui(self):
         """Creates a single modality row with dropdown, directory picker,
         and delete button."""
         dropdown = widgets.ComboBox(
-            label="Modality",
-            choices=JobSettings._modality_abbreviations,
+            label="Modality", choices=list(JobSettings._modality_map.keys())
         )
         picker = widgets.FileEdit(label="Directory", mode="d")
         delete_btn = widgets.PushButton(text="Delete")
@@ -111,69 +157,36 @@ class JobSettingsForm:
     # Validation logic
     # -------------------------------
     def _validate_inputs(self):
-        """Validate the form inputs using the real JobSettings model."""
+        """Validate the form inputs using the JobSettings model."""
+        data = self._collect_field_values()
+        data["modality_directories"] = self._collect_modality_directories()
 
-        def normalize(v):
-            """Convert a path string to Path object; treat
-                empty or '.' as None."""
-            if not v or str(v) == ".":
-                return None
-            return Path(v)
-
-        # Assemble modality_directory values
-        modality_dict = {}
-        for row in self.modality_container:
-            if not isinstance(row, widgets.Container):
-                continue
-            m = row[0].value
-            d = normalize(row[1].value)
-            modality_dict[m] = d
-
-        # Assemble rest of field values
-        field_values = {}
-        for name, widget in self.field_widgets.items():
-            field = JobSettings.model_fields[name]
-            if field.annotation in (DirectoryPath, Path):
-                val = normalize(widget.value)
-            else:
-                val = widget.value
-            field_values[name] = val
-
-        field_values["modality_directories"] = modality_dict
-
-        # Pydantic validation
         try:
-            settings = JobSettings.model_validate(field_values)
+            settings = JobSettings.model_validate(data)
             self.output_box.value = (
                 "Validation successful!\n" + settings.model_dump_json(indent=2)
             )
             self._validation_passed = True
+
         except ValidationError as e:
-            # Make errors more user-friendly
-            messages = []
-            for err in e.errors():
-                loc = ".".join(str(part) for part in err["loc"])
-                msg = err["msg"]
-                messages.append(f"{loc}: {msg}")
-            self.output_box.value = "Validation failed:\n\n" + "\n".join(
-                messages
+            errors = "\n".join(
+                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}"
+                for err in e.errors()
             )
+            self.output_box.value = "Validation failed:\n\n" + errors
             self._validation_passed = False
+
         except Exception as e:
-            # Catch any other unexpected errors
             self.output_box.value = f"Unknown error: {repr(e)}"
             self._validation_passed = False
 
     # -------------------------------
-    # Modality row addition
+    # Modality row controls
     # -------------------------------
     def _add_modality_row(self):
         """Append a new modality row to the modality container."""
-        self.modality_container.append(self._make_modality_row())
+        self.modality_container.append(self._modality_row_ui())
 
-    # -------------------------------
-    # Modality row deletion
-    # -------------------------------
     def _delete_modality_row(self, row):
         """Delete a modality row unless it's the last remaining row."""
         if len(self.modality_container) <= 1:
@@ -205,10 +218,8 @@ class JobSettingsForm:
                 widget.value = field.default
 
         self.modality_container.clear()
-        self.modality_container.append(self._make_modality_row())
+        self.modality_container.append(self._modality_row_ui())
         self.output_box.value = ""
-
-        # Reset validation flag
         self._validation_passed = False
 
     # -------------------------------
@@ -223,67 +234,18 @@ class JobSettingsForm:
             )
             return
 
-        # Helper to normalize paths
-        def normalize(v):
-            """Convert a path string to Path object; treat
-                empty or '.' as None."""
-            if not v or str(v) == ".":
-                return None
-            return Path(v)
-
-        # Assemble modality directories
-        modality_dict = {}
-        for row in self.modality_container:
-            if not isinstance(row, widgets.Container):
-                continue
-            modality = row[0].value
-            directory = normalize(row[1].value)
-            modality_dict[modality] = directory
-
-        # Metadata directory
-        metadata_dir = normalize(
-            self.field_widgets["metadata_directory"].value
-        )
-
-        # Dry run flag
-        dry_run = bool(
-            self.field_widgets.get("dry_run", widgets.CheckBox()).value
-        )
-
-        # S3 bucket from UI
-        s3_bucket = self.field_widgets["s3_bucket"].value
-
-        # Create JobSettings
         try:
-            job_settings = JobSettings(
-                dry_run=dry_run,
-                modality_directories=modality_dict,
-                metadata_directory=metadata_dir,
-                s3_bucket=s3_bucket,
-            )
-
-            # Run the upload job
-            job = UploadDataJob(job_settings=job_settings)
-            job.run_job()
-            if dry_run:
-                self.output_box.value = (
-                    "Dry-run complete. No files were uploaded.\n\n"
-                    f"The job would have uploaded to:\n{job.s3_root_location}"
-                )
-            else:
-                self.output_box.value = (
-                    f"Upload job completed successfully to "
-                    f"{job.s3_root_location}."
-                )
+            payload = self._assemble_submit_payload()
+            job_settings = JobSettings(**payload)
+            self.output_box.value = self._run_upload_job(job_settings)
 
         except ValidationError as e:
-            messages = []
-            for err in e.errors():
-                loc = ".".join(str(part) for part in err["loc"])
-                msg = err["msg"]
-                messages.append(f"{loc}: {msg}")
+            errors = "\n".join(
+                f"{'.'.join(str(p) for p in err['loc'])}: {err['msg']}"
+                for err in e.errors()
+            )
             self.output_box.value = (
-                "Job submission failed validation:\n\n" + "\n".join(messages)
+                "Job submission failed validation:\n\n" + errors
             )
 
         except Exception as e:
