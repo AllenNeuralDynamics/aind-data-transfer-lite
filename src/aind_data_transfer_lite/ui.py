@@ -7,6 +7,7 @@ from magicclass import magicclass
 from magicgui import widgets
 from pydantic import DirectoryPath, ValidationError
 from qtpy import QtWidgets
+from qtpy.QtWidgets import QApplication
 
 from aind_data_transfer_lite.models import JobSettings
 from aind_data_transfer_lite.upload_data import UploadDataJob
@@ -43,6 +44,10 @@ class JobSettingsForm:
 
             self.field_widgets[name] = widget
 
+        # Reset validation if any form field changes
+        for widget in self.field_widgets.values():
+            widget.changed.connect(lambda: setattr(self, "_validation_passed", False))
+
         # -------------------------------
         # Modality UI
         # -------------------------------
@@ -67,21 +72,25 @@ class JobSettingsForm:
         self.output_box.native.setReadOnly(True)
         self.append(self.output_box)
 
-        self.validate_btn = widgets.PushButton(text="Validate")
-        self.append(self.validate_btn)
-        self.validate_btn.clicked.connect(self._validate_inputs)
-
+        # Copy Output button
         self.copy_btn = widgets.PushButton(text="Copy Output")
-        self.append(self.copy_btn)
         self.copy_btn.clicked.connect(self._copy_output)
+        self.append(self.copy_btn)
 
+        # Validate button
+        self.validate_btn = widgets.PushButton(text="Validate")
+        self.validate_btn.clicked.connect(self._validate_inputs)
+        self.append(self.validate_btn)
+
+        # Submit button
         self.submit_btn = widgets.PushButton(text="Submit")
-        self.append(self.submit_btn)
         self.submit_btn.clicked.connect(self._submit_job)
+        self.append(self.submit_btn)
 
+        # Clear button
         self.clear_btn = widgets.PushButton(text="Clear")
-        self.append(self.clear_btn)
         self.clear_btn.clicked.connect(self._clear_form)
+        self.append(self.clear_btn)
 
     # -------------------------------
     # Helper functions
@@ -151,6 +160,10 @@ class JobSettingsForm:
         # Delete the row
         delete_btn.clicked.connect(lambda: self._delete_modality_row(row))
 
+        #reset validation if user changes dropdown or directory
+        dropdown.changed.connect(lambda: setattr(self, "_validation_passed", False))
+        picker.changed.connect(lambda: setattr(self, "_validation_passed", False))
+
         return row
 
     # -------------------------------
@@ -164,7 +177,7 @@ class JobSettingsForm:
         try:
             settings = JobSettings.model_validate(data)
             self.output_box.value = (
-                "Validation successful!\n" + settings.model_dump_json(indent=2)
+                "Validation successful!\n" + settings.model_dump_json(indent=3)
             )
             self._validation_passed = True
 
@@ -237,7 +250,13 @@ class JobSettingsForm:
         try:
             payload = self._assemble_submit_payload()
             job_settings = JobSettings(**payload)
-            self.output_box.value = self._run_upload_job(job_settings)
+
+            self.output_box.value = "Uploading..."
+            QApplication.processEvents()
+
+            result_msg = self._run_upload_job(job_settings)
+
+            self.output_box.value = result_msg
 
         except ValidationError as e:
             errors = "\n".join(
