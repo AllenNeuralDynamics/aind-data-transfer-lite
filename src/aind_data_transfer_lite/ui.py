@@ -44,10 +44,6 @@ class JobSettingsForm:
 
             self.field_widgets[name] = widget
 
-        # Reset validation if any form field changes
-        for widget in self.field_widgets.values():
-            widget.changed.connect(lambda: setattr(self, "_validation_passed", False))
-
         # -------------------------------
         # Modality UI
         # -------------------------------
@@ -160,10 +156,6 @@ class JobSettingsForm:
         # Delete the row
         delete_btn.clicked.connect(lambda: self._delete_modality_row(row))
 
-        #reset validation if user changes dropdown or directory
-        dropdown.changed.connect(lambda: setattr(self, "_validation_passed", False))
-        picker.changed.connect(lambda: setattr(self, "_validation_passed", False))
-
         return row
 
     # -------------------------------
@@ -179,7 +171,6 @@ class JobSettingsForm:
             self.output_box.value = (
                 "Validation successful!\n" + settings.model_dump_json(indent=3)
             )
-            self._validation_passed = True
 
         except ValidationError as e:
             errors = "\n".join(
@@ -187,11 +178,9 @@ class JobSettingsForm:
                 for err in e.errors()
             )
             self.output_box.value = "Validation failed:\n\n" + errors
-            self._validation_passed = False
 
         except Exception as e:
             self.output_box.value = f"Unknown error: {repr(e)}"
-            self._validation_passed = False
 
     # -------------------------------
     # Modality row controls
@@ -233,20 +222,12 @@ class JobSettingsForm:
         self.modality_container.clear()
         self.modality_container.append(self._modality_row_ui())
         self.output_box.value = ""
-        self._validation_passed = False
 
     # -------------------------------
     # Submit job button
     # -------------------------------
     def _submit_job(self):
         """Start a job upload using the current form values."""
-        # Ensure the form has been validated first
-        if not getattr(self, "_validation_passed", False):
-            self.output_box.value = (
-                "Please validate the form before submitting."
-            )
-            return
-
         try:
             payload = self._assemble_submit_payload()
             job_settings = JobSettings(**payload)
