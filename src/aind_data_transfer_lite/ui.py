@@ -159,28 +159,48 @@ class JobSettingsForm:
         return row
 
     # -------------------------------
-    # Validation logic
+    # Shared logic for validating inputs, with optional job execution
     # -------------------------------
-    def _validate_inputs(self):
-        """Validate the form inputs using the JobSettings model."""
-        data = self._collect_field_values()
-        data["modality_directories"] = self._collect_modality_directories()
+    def _validate_and_optionally_run(self, run_job: bool):
+        """Validate form data and optionally run the upload job."""
+        data = self._assemble_submit_payload()
 
         try:
             settings = JobSettings.model_validate(data)
-            self.output_box.value = (
-                "Validation successful!\n" + settings.model_dump_json(indent=3)
-            )
+
+            if not run_job:
+                self.output_box.value = (
+                    "Validation successful!\n" + settings.model_dump_json(indent=3)
+                )
+                return
+
+            self.output_box.value = "Uploading..."
+            QApplication.processEvents()
+
+            result_msg = self._run_upload_job(settings)
+            self.output_box.value = result_msg
 
         except ValidationError as e:
             errors = "\n".join(
                 f"{'.'.join(str(part) for part in err['loc'])}: {err['msg']}"
                 for err in e.errors()
             )
-            self.output_box.value = "Validation failed:\n\n" + errors
+            prefix = (
+                "Validation failed:\n\n"
+                if not run_job
+                else "Job submission failed validation:\n\n"
+            )
+            self.output_box.value = prefix + errors
 
         except Exception as e:
             self.output_box.value = f"Unknown error: {repr(e)}"
+
+    # -------------------------------
+    # Validation logic
+    # -------------------------------
+    def _validate_inputs(self):
+        """Validate form inputs without running a job."""
+        self._validate_and_optionally_run(run_job=False)
 
     # -------------------------------
     # Modality row controls
@@ -227,29 +247,8 @@ class JobSettingsForm:
     # Submit job button
     # -------------------------------
     def _submit_job(self):
-        """Start a job upload using the current form values."""
-        try:
-            payload = self._assemble_submit_payload()
-            job_settings = JobSettings(**payload)
-
-            self.output_box.value = "Uploading..."
-            QApplication.processEvents()
-
-            result_msg = self._run_upload_job(job_settings)
-
-            self.output_box.value = result_msg
-
-        except ValidationError as e:
-            errors = "\n".join(
-                f"{'.'.join(str(part) for part in err['loc'])}: {err['msg']}"
-                for err in e.errors()
-            )
-            self.output_box.value = (
-                "Job submission failed validation:\n\n" + errors
-            )
-
-        except Exception as e:
-            self.output_box.value = f"Unknown error: {repr(e)}"
+        """Validate inputs and run the upload job if valid."""
+        self._validate_and_optionally_run(run_job=True)
 
 
 if __name__ == "__main__":
