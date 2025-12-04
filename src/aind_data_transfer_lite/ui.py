@@ -5,9 +5,12 @@ from typing import get_origin
 
 from magicclass import magicclass
 from magicgui import widgets
-from pydantic import DirectoryPath
+from pydantic import DirectoryPath, ValidationError
+from qtpy import QtWidgets
+from qtpy.QtWidgets import QApplication
 
 from aind_data_transfer_lite.models import JobSettings
+from aind_data_transfer_lite.upload_data import UploadDataJob
 
 
 @magicclass(layout="vertical", labels=True)
@@ -29,7 +32,6 @@ class JobSettingsForm:
             if not field.is_required():
                 label += " (Optional)"
 
-            # Safe type check for DirectoryPath / Path
             origin = get_origin(field.annotation)
             if origin is None and field.annotation in (DirectoryPath, Path):
                 widget = widgets.FileEdit(label=label, mode="d")
@@ -46,10 +48,11 @@ class JobSettingsForm:
         # Modality UI
         # -------------------------------
         self.modality_container = widgets.Container(layout="vertical")
-        self.modality_container.append(self._make_modality_row())
+        self.modality_container.append(self._modality_row_ui())
         self.append(self.modality_container)
 
         self.add_modality_btn = widgets.PushButton(text="Add Modality")
+        self.add_modality_btn.clicked.connect(self._add_modality_row)
         self.append(self.add_modality_btn)
 
         # -------------------------------
@@ -65,36 +68,191 @@ class JobSettingsForm:
         self.output_box.native.setReadOnly(True)
         self.append(self.output_box)
 
-        self.copy_btn = widgets.PushButton(text="Copy Input")
+        # Copy Output button
+        self.copy_btn = widgets.PushButton(text="Copy Output")
+        self.copy_btn.clicked.connect(self._copy_output)
         self.append(self.copy_btn)
 
+        # Validate button
+        self.validate_btn = widgets.PushButton(text="Validate")
+        self.validate_btn.clicked.connect(self._validate_inputs)
+        self.append(self.validate_btn)
+
+        # Submit button
         self.submit_btn = widgets.PushButton(text="Submit")
+        self.submit_btn.clicked.connect(self._submit_job)
         self.append(self.submit_btn)
 
+        # Clear button
         self.clear_btn = widgets.PushButton(text="Clear")
+        self.clear_btn.clicked.connect(self._clear_form)
         self.append(self.clear_btn)
+
+    # -------------------------------
+    # Helper functions
+    # -------------------------------
+    def _normalize_path(self, value):
+        """Convert empty, None, or '.' to None; else return a Path."""
+        if not value or str(value) == ".":
+            return None
+        return Path(value)
+
+    def _collect_modality_directories(self):
+        """Return dict of modality → directory from UI rows."""
+        modality_dict = {}
+        for row in self.modality_container:
+            if isinstance(row, widgets.Container):
+                modality = row[0].value
+                directory = self._normalize_path(row[1].value)
+                modality_dict[modality] = directory
+        return modality_dict
+
+    def _collect_field_values(self):
+        """Return dict of all non-modality JobSettings fields."""
+        values = {}
+        for name, widget in self.field_widgets.items():
+            field = JobSettings.model_fields[name]
+            if field.annotation in (DirectoryPath, Path):
+                values[name] = self._normalize_path(widget.value)
+            else:
+                values[name] = widget.value
+        return values
+
+    def _assemble_submit_payload(self):
+        """Collect all form values into a payload for JobSettings."""
+        data = self._collect_field_values()
+        data["modality_directories"] = self._collect_modality_directories()
+        return data
+
+    def _run_upload_job(self, job_settings):
+        """Run the upload job and return a string message."""
+        job = UploadDataJob(job_settings=job_settings)
+        job.run_job()
+        if job_settings.dry_run:
+            return (
+                "Dry-run complete. No files were uploaded.\n\n"
+                f"The job would have uploaded to:\n{job.s3_root_location}"
+            )
+        return f"Upload job completed successfully to {job.s3_root_location}."
 
     # -------------------------------
     # Modality row (buttons only)
     # -------------------------------
-    def _make_modality_row(self):
+    def _modality_row_ui(self):
         """Creates a single modality row with dropdown, directory picker,
-        and delete button.
-        """
+        and delete button."""
         dropdown = widgets.ComboBox(
-            label="Modality",
-            choices=JobSettings._modality_abbreviations,
+            label="Modality", choices=list(JobSettings._modality_map.keys())
         )
         picker = widgets.FileEdit(label="Directory", mode="d")
         delete_btn = widgets.PushButton(text="Delete")
 
-        return widgets.Container(
+        # Create the row
+        row = widgets.Container(
             widgets=[dropdown, picker, delete_btn],
             layout="horizontal",
         )
 
+        # Delete the row
+        delete_btn.clicked.connect(lambda: self._delete_modality_row(row))
+
+        return row
+
+    # -------------------------------
+    # Shared logic for validating inputs, with optional job execution
+    # -------------------------------
+    def _validate_and_optionally_run(self, run_job: bool):
+        """Validate form data and optionally run the upload job."""
+        data = self._assemble_submit_payload()
+
+        try:
+            settings = JobSettings.model_validate(data)
+
+            if not run_job:
+                self.output_box.value = (
+                    "Validation successful!\n" + settings.model_dump_json(indent=3)
+                )
+                return
+
+            self.output_box.value = "Uploading..."
+            QApplication.processEvents()
+
+            result_msg = self._run_upload_job(settings)
+            self.output_box.value = result_msg
+
+        except ValidationError as e:
+            errors = "\n".join(
+                f"{'.'.join(str(part) for part in err['loc'])}: {err['msg']}"
+                for err in e.errors()
+            )
+            prefix = (
+                "Validation failed:\n\n"
+                if not run_job
+                else "Job submission failed validation:\n\n"
+            )
+            self.output_box.value = prefix + errors
+
+        except Exception as e:
+            self.output_box.value = f"Unknown error: {repr(e)}"
+
+    # -------------------------------
+    # Validation logic
+    # -------------------------------
+    def _validate_inputs(self):
+        """Validate form inputs without running a job."""
+        self._validate_and_optionally_run(run_job=False)
+
+    # -------------------------------
+    # Modality row controls
+    # -------------------------------
+    def _add_modality_row(self):
+        """Append a new modality row to the modality container."""
+        self.modality_container.append(self._modality_row_ui())
+
+    def _delete_modality_row(self, row):
+        """Delete a modality row unless it's the last remaining row."""
+        if len(self.modality_container) <= 1:
+            return
+        self.modality_container.remove(row)
+
+    # -------------------------------
+    # Copy output button
+    # -------------------------------
+    def _copy_output(self):
+        """Copy the current output box contents to the system clipboard."""
+        text = self.output_box.value or ""
+        QtWidgets.QApplication.clipboard().setText(text)
+
+    # -------------------------------
+    # Clear form button
+    # -------------------------------
+    def _clear_form(self):
+        """Reset the form to default values."""
+        for name, field in JobSettings.model_fields.items():
+            if name == "modality_directories":
+                continue
+            widget = self.field_widgets[name]
+            if field.annotation in (DirectoryPath, Path):
+                widget.value = ""
+            elif field.annotation is bool:
+                widget.value = field.default
+            elif field.annotation is str:
+                widget.value = field.default
+
+        self.modality_container.clear()
+        self.modality_container.append(self._modality_row_ui())
+        self.output_box.value = ""
+
+    # -------------------------------
+    # Submit job button
+    # -------------------------------
+    def _submit_job(self):
+        """Validate inputs and run the upload job if valid."""
+        self._validate_and_optionally_run(run_job=True)
+
 
 if __name__ == "__main__":
+
     gui = JobSettingsForm()
     gui.native.setWindowTitle("AIND Data Transfer Lite")
     gui.show(run=True)
