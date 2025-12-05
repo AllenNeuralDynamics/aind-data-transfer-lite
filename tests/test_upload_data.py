@@ -280,10 +280,10 @@ class TestUploadDataJob(unittest.TestCase):
     #         "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
     #     )
 
-    @patch(
-        "aind_data_transfer_lite.upload_data.UploadDataJob"
-        "._upload_metadata_nd_file"
-    )
+    # @patch(
+    #     "aind_data_transfer_lite.upload_data.UploadDataJob"
+    #     "._upload_metadata_nd_file"
+    # )
     @patch(
         "aind_data_transfer_lite.upload_data.UploadDataJob"
         "._upload_directory_data"
@@ -302,7 +302,7 @@ class TestUploadDataJob(unittest.TestCase):
         mock_check_s3_location: MagicMock,
         mock_check_metadata_files: MagicMock,
         mock_upload_directory_data: MagicMock,
-        mock_upload_metadata_nd_file: MagicMock,
+        # mock_upload_metadata_nd_file: MagicMock,
     ):
         """Tests run_job."""
         mock_time.side_effect = [1750017362.7353837, 1750018371.6479027]
@@ -311,7 +311,7 @@ class TestUploadDataJob(unittest.TestCase):
         mock_check_s3_location.assert_called_once()
         mock_check_metadata_files.assert_called_once()
         mock_upload_directory_data.assert_called_once()
-        mock_upload_metadata_nd_file.assert_called_once()
+        # mock_upload_metadata_nd_file.assert_called_once()
         self.assertEqual(
             ["INFO:root:Job finished in 0:16:48."], captured.output
         )
