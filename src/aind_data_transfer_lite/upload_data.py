@@ -12,10 +12,7 @@ from time import time
 
 import boto3
 from aind_data_access_api.document_db import MetadataDbClient
-from aind_data_schema.core.metadata import (
-    CORE_FILES,
-    REQUIRED_FILE_SETS,
-)
+from aind_data_schema.core.metadata import CORE_FILES, REQUIRED_FILE_SETS
 from aind_data_schema_models.data_name_patterns import build_data_name
 
 from aind_data_transfer_lite.models import JobSettings

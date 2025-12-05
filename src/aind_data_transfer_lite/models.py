@@ -33,7 +33,6 @@ class JobSettings(
         title="Modality Directories",
     )
 
-
     # Optional Fields
     metadata_host: str = Field(
         default="api.allenneuraldynamics.org",

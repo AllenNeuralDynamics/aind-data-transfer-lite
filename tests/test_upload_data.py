@@ -1,6 +1,5 @@
 """Unit tests for upload_data module."""
 
-import json
 import os
 import unittest
 from pathlib import Path

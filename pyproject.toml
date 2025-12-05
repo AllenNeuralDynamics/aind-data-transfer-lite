@@ -22,7 +22,7 @@ dependencies = [
     "aind-data-schema==2.0.5",
     "aind-data-schema-models<5.0",
     "awscli",
-    "boto3"
+    "boto3",
     "pydantic>=2.0,<2.12",
     "pydantic-settings>=2.8.0,<3.0",
 ]
