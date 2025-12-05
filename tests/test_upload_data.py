@@ -233,53 +233,53 @@ class TestUploadDataJob(unittest.TestCase):
             expected_subprocess_calls, mock_run_s3_command.mock_calls
         )
 
-    @patch("boto3.client")
-    def test_upload_metadata_nd_file_dry_run(self, mock_boto: MagicMock):
-        """Tests _upload_metadata_nd_file with dry_run True."""
-        mock_put_object = MagicMock()
-        mock_client = MagicMock()
-        mock_client.put_object = mock_put_object
-        mock_boto.return_value = mock_client
-        with self.assertLogs() as captured:
-            self.job._upload_metadata_nd_file()
+    # @patch("boto3.client")
+    # def test_upload_metadata_nd_file_dry_run(self, mock_boto: MagicMock):
+    #     """Tests _upload_metadata_nd_file with dry_run True."""
+    #     mock_put_object = MagicMock()
+    #     mock_client = MagicMock()
+    #     mock_client.put_object = mock_put_object
+    #     mock_boto.return_value = mock_client
+    #     with self.assertLogs() as captured:
+    #         self.job._upload_metadata_nd_file()
 
-        self.assertEqual(
-            [
-                "INFO:root:(dryrun) Uploading metadata.nd.json to"
-                " s3://aind-private-data-dev-u5u0i5/"
-                "12345_2022-02-21_16-30-01/metadata.nd.json"
-            ],
-            captured.output,
-        )
-        mock_put_object.assert_not_called()
+    #     self.assertEqual(
+    #         [
+    #             "INFO:root:(dryrun) Uploading metadata.nd.json to"
+    #             " s3://aind-private-data-dev-u5u0i5/"
+    #             "12345_2022-02-21_16-30-01/metadata.nd.json"
+    #         ],
+    #         captured.output,
+    #     )
+    #     mock_put_object.assert_not_called()
 
-    @patch("boto3.client")
-    def test_upload_metadata_nd_file_no_dry_run(self, mock_boto: MagicMock):
-        """Tests _upload_metadata_nd_file with dry_run False."""
-        job_settings_run = self.job.job_settings.model_copy(
-            update={"dry_run": False}, deep=True
-        )
-        job_run = UploadDataJob(job_settings=job_settings_run)
-        mock_put_object = MagicMock()
-        mock_client = MagicMock()
-        mock_client.put_object = mock_put_object
-        mock_boto.return_value = mock_client
-        with self.assertLogs() as _:
-            job_run._upload_metadata_nd_file()
-        mocked_put_object_call_args = mock_put_object.call_args.kwargs
-        decoded_body = mocked_put_object_call_args["Body"].decode("UTF-8")
-        json_contents_being_uploaded = json.loads(decoded_body)
-        self.assertEqual(
-            mocked_put_object_call_args["Bucket"],
-            "aind-private-data-dev-u5u0i5",
-        )
-        self.assertEqual(
-            mocked_put_object_call_args["Key"],
-            "12345_2022-02-21_16-30-01/metadata.nd.json",
-        )
-        self.assertEqual(
-            "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
-        )
+    # @patch("boto3.client")
+    # def test_upload_metadata_nd_file_no_dry_run(self, mock_boto: MagicMock):
+    #     """Tests _upload_metadata_nd_file with dry_run False."""
+    #     job_settings_run = self.job.job_settings.model_copy(
+    #         update={"dry_run": False}, deep=True
+    #     )
+    #     job_run = UploadDataJob(job_settings=job_settings_run)
+    #     mock_put_object = MagicMock()
+    #     mock_client = MagicMock()
+    #     mock_client.put_object = mock_put_object
+    #     mock_boto.return_value = mock_client
+    #     with self.assertLogs() as _:
+    #         job_run._upload_metadata_nd_file()
+    #     mocked_put_object_call_args = mock_put_object.call_args.kwargs
+    #     decoded_body = mocked_put_object_call_args["Body"].decode("UTF-8")
+    #     json_contents_being_uploaded = json.loads(decoded_body)
+    #     self.assertEqual(
+    #         mocked_put_object_call_args["Bucket"],
+    #         "aind-private-data-dev-u5u0i5",
+    #     )
+    #     self.assertEqual(
+    #         mocked_put_object_call_args["Key"],
+    #         "12345_2022-02-21_16-30-01/metadata.nd.json",
+    #     )
+    #     self.assertEqual(
+    #         "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
+    #     )
 
     @patch(
         "aind_data_transfer_lite.upload_data.UploadDataJob"

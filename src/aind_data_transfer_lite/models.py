@@ -33,18 +33,30 @@ class JobSettings(
         title="Modality Directories",
     )
 
+
     # Optional Fields
+    metadata_host: str = Field(
+        default="api.allenneuraldynamics.org",
+        description="Host for the MetadataDbClient registration endpoint",
+        title="Metadata DocDB Host",
+    )
+
+    metadata_version: str = Field(
+        default="v2",
+        description="API version for MetadataDbClient",
+        title="Metadata API Version",
+    )
+    s3_bucket: str = Field(
+        default="aind-open-data",
+        description="S3 bucket to upload data to",
+        title="S3 Bucket",
+    )
     dry_run: bool = Field(
         default=True,
         description=(
             "Perform a dry run of the upload without uploading any data."
         ),
         title="Dry Run",
-    )
-    s3_bucket: str = Field(
-        default="aind-open-data",
-        description="S3 bucket to upload data to",
-        title="S3 Bucket",
     )
 
     # noinspection PyNestedDecorators
