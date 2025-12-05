@@ -29,8 +29,6 @@ class JobSettingsForm:
                 continue  # handled separately
 
             label = field.title or field.alias
-            if not field.is_required():
-                label += " (Optional)"
 
             origin = get_origin(field.annotation)
             if origin is None and field.annotation in (DirectoryPath, Path):
@@ -170,7 +168,8 @@ class JobSettingsForm:
 
             if not run_job:
                 self.output_box.value = (
-                    "Validation successful!\n" + settings.model_dump_json(indent=3)
+                    "Validation successful!\n"
+                    + settings.model_dump_json(indent=3)
                 )
                 return
 
