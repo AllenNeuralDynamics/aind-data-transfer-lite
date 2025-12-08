@@ -36,12 +36,17 @@ class JobSettings(
     # Optional Fields
     metadata_docdb_host: str = Field(
         default="api.allenneuraldynamics-test.org",
-        description="Host for the MetadataDBClient to interface with DocumentDB",
+        description=(
+            "Host for the MetadataDBClient to interface with DocumentDB"
+        ),
         title="Metadata DocDB Host",
     )
     metadata_docdb_version: str = Field(
         default="v2",
-        description="API version for the MetadataDBClient to interface with DocumentDB",
+        description=(
+            "API version for the MetadataDBClient to interface "
+            "with DocumentDB"
+        ),
         title="Metadata API Version",
     )
     s3_bucket: str = Field(

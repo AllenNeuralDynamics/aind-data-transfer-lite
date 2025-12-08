@@ -262,7 +262,7 @@ class TestUploadDataJob(unittest.TestCase):
             job_run._register_asset()
         mock_docdb_client.assert_called_once_with(
             host=job_settings_run.metadata_docdb_host,
-            api_version=job_settings_run.metadata_docdb_version,
+            version=job_settings_run.metadata_docdb_version,
         )
         mock_instance.register_asset.assert_called_once_with(
             s3_location=job_run.s3_root_location
