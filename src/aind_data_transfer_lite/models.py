@@ -35,7 +35,7 @@ class JobSettings(
 
     # Optional Fields
     metadata_docdb_host: str = Field(
-        default="api.allenneuraldynamics-test.org",
+        default="api.allenneuraldynamics.org",
         description=(
             "Host for the MetadataDBClient to interface with DocumentDB"
         ),

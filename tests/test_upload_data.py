@@ -224,7 +224,7 @@ class TestUploadDataJob(unittest.TestCase):
         self.assertEqual(
             [
                 "INFO:root:Uploading Modality Data",
-                "INFO:root:Uploading metadata.nd.json",
+                "INFO:root:Uploading metadata files",
             ],
             captured.output,
         )
