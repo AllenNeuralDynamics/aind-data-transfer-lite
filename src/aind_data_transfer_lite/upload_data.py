@@ -156,16 +156,12 @@ class UploadDataJob:
                 f"(dryrun) Would register asset at: {self.s3_root_location}"
             )
             return
-
         logging.info(f"Registering asset for: {self.s3_root_location}")
-
         client = MetadataDbClient(
             host=self.job_settings.metadata_host,
-            api_version=self.job_settings.metadata_version,
+            version=self.job_settings.metadata_version,
         )
-
         response = client.register_asset(s3_location=self.s3_root_location)
-
         logging.info(f"Register asset response: {response}")
 
     def run_job(self):

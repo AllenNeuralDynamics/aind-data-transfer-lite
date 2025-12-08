@@ -233,11 +233,11 @@ class TestUploadDataJob(unittest.TestCase):
         )
 
     @patch("aind_data_transfer_lite.upload_data.MetadataDbClient")
-    def test_register_asset_dry_run(self, mock_client: MagicMock):
+    def test_register_asset_dry_run(self, mock_docdb_client: MagicMock):
         """Tests _register_asset with dry_run True."""
         with self.assertLogs(level="INFO") as captured:
             self.job._register_asset()
-        mock_client.assert_not_called()
+        mock_docdb_client.assert_not_called()
         self.assertEqual(
             [
                 (
@@ -249,7 +249,7 @@ class TestUploadDataJob(unittest.TestCase):
         )
 
     @patch("aind_data_transfer_lite.upload_data.MetadataDbClient")
-    def test_register_asset_no_dry_run(self, mock_client: MagicMock):
+    def test_register_asset_no_dry_run(self, mock_docdb_client: MagicMock):
         """Tests _register_asset with dry_run False."""
         job_settings_run = self.job.job_settings.model_copy(
             update={"dry_run": False}, deep=True
@@ -257,12 +257,12 @@ class TestUploadDataJob(unittest.TestCase):
         job_run = UploadDataJob(job_settings=job_settings_run)
         mock_instance = MagicMock()
         mock_instance.register_asset.return_value = {"status": "ok"}
-        mock_client.return_value = mock_instance
+        mock_docdb_client.return_value = mock_instance
         with self.assertLogs(level="INFO") as captured:
             job_run._register_asset()
-        mock_client.assert_called_once_with(
-            host=job_settings_run.metadata_host,
-            api_version=job_settings_run.metadata_version,
+        mock_docdb_client.assert_called_once_with(
+            host=job_settings_run.metadata_docdb_host,
+            api_version=job_settings_run.metadata_docdb_version,
         )
         mock_instance.register_asset.assert_called_once_with(
             s3_location=job_run.s3_root_location
