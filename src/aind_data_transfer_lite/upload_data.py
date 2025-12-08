@@ -12,13 +12,38 @@ from time import time
 
 import boto3
 from aind_data_access_api.document_db import MetadataDbClient
-from aind_data_schema.core.metadata import CORE_FILES, REQUIRED_FILE_SETS
 from aind_data_schema_models.data_name_patterns import build_data_name
 
 from aind_data_transfer_lite.models import JobSettings
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 
+# ---------------------------------------------------------------------
+# The following constants are copied from aind-data-schema v2.2.0
+# ---------------------------------------------------------------------
+CORE_FILES = [
+    "subject",
+    "data_description",
+    "procedures",
+    "instrument",
+    "processing",
+    "acquisition",
+    "quality_control",
+    "model",
+]
+
+# Files present must include at least one of these "file set" keys,
+# and all files listed in any of the matched sets
+REQUIRED_FILE_SETS = {
+    "subject": [
+        "data_description",
+        "procedures",
+        "instrument",
+        "acquisition",
+    ],
+    "processing": ["data_description"],
+    "model": ["data_description"],
+}
 
 class UploadDataJob:
     """Class to handle uploading data."""

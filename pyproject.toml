@@ -19,7 +19,6 @@ dynamic = ["version"]
 
 dependencies = [
     "aind-data-access-api",
-    "aind-data-schema==2.0.5",
     "aind-data-schema-models<5.0",
     "awscli",
     "boto3",
