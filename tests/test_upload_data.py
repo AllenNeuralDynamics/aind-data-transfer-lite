@@ -1,6 +1,5 @@
 """Unit tests for upload_data module."""
 
-import json
 import os
 import unittest
 from pathlib import Path
@@ -225,7 +224,7 @@ class TestUploadDataJob(unittest.TestCase):
         self.assertEqual(
             [
                 "INFO:root:Uploading Modality Data",
-                "INFO:root:Uploading metadata.nd.json",
+                "INFO:root:Uploading metadata files",
             ],
             captured.output,
         )
@@ -233,58 +232,50 @@ class TestUploadDataJob(unittest.TestCase):
             expected_subprocess_calls, mock_run_s3_command.mock_calls
         )
 
-    @patch("boto3.client")
-    def test_upload_metadata_nd_file_dry_run(self, mock_boto: MagicMock):
-        """Tests _upload_metadata_nd_file with dry_run True."""
-        mock_put_object = MagicMock()
-        mock_client = MagicMock()
-        mock_client.put_object = mock_put_object
-        mock_boto.return_value = mock_client
-        with self.assertLogs() as captured:
-            self.job._upload_metadata_nd_file()
-
+    @patch("aind_data_transfer_lite.upload_data.MetadataDbClient")
+    def test_register_asset_dry_run(self, mock_docdb_client: MagicMock):
+        """Tests _register_asset with dry_run True."""
+        with self.assertLogs(level="INFO") as captured:
+            self.job._register_asset()
+        mock_docdb_client.assert_not_called()
         self.assertEqual(
             [
-                "INFO:root:(dryrun) Uploading metadata.nd.json to"
-                " s3://aind-private-data-dev-u5u0i5/"
-                "12345_2022-02-21_16-30-01/metadata.nd.json"
+                (
+                    "INFO:root:(dryrun) Would register asset at:"
+                    f" {self.job.s3_root_location}"
+                )
             ],
             captured.output,
         )
-        mock_put_object.assert_not_called()
 
-    @patch("boto3.client")
-    def test_upload_metadata_nd_file_no_dry_run(self, mock_boto: MagicMock):
-        """Tests _upload_metadata_nd_file with dry_run False."""
+    @patch("aind_data_transfer_lite.upload_data.MetadataDbClient")
+    def test_register_asset_no_dry_run(self, mock_docdb_client: MagicMock):
+        """Tests _register_asset with dry_run False."""
         job_settings_run = self.job.job_settings.model_copy(
             update={"dry_run": False}, deep=True
         )
         job_run = UploadDataJob(job_settings=job_settings_run)
-        mock_put_object = MagicMock()
-        mock_client = MagicMock()
-        mock_client.put_object = mock_put_object
-        mock_boto.return_value = mock_client
-        with self.assertLogs() as _:
-            job_run._upload_metadata_nd_file()
-        mocked_put_object_call_args = mock_put_object.call_args.kwargs
-        decoded_body = mocked_put_object_call_args["Body"].decode("UTF-8")
-        json_contents_being_uploaded = json.loads(decoded_body)
-        self.assertEqual(
-            mocked_put_object_call_args["Bucket"],
-            "aind-private-data-dev-u5u0i5",
+        mock_instance = MagicMock()
+        mock_instance.register_asset.return_value = {"status": "ok"}
+        mock_docdb_client.return_value = mock_instance
+        with self.assertLogs(level="INFO") as captured:
+            job_run._register_asset()
+        mock_docdb_client.assert_called_once_with(
+            host=job_settings_run.metadata_docdb_host,
+            version=job_settings_run.metadata_docdb_version,
+        )
+        mock_instance.register_asset.assert_called_once_with(
+            s3_location=job_run.s3_root_location
         )
         self.assertEqual(
-            mocked_put_object_call_args["Key"],
-            "12345_2022-02-21_16-30-01/metadata.nd.json",
-        )
-        self.assertEqual(
-            "12345_2022-02-21_16-30-01", json_contents_being_uploaded["name"]
+            [
+                f"INFO:root:Registering asset for: {job_run.s3_root_location}",
+                "INFO:root:Register asset response: {'status': 'ok'}",
+            ],
+            captured.output,
         )
 
-    @patch(
-        "aind_data_transfer_lite.upload_data.UploadDataJob"
-        "._upload_metadata_nd_file"
-    )
+    @patch("aind_data_transfer_lite.upload_data.UploadDataJob._register_asset")
     @patch(
         "aind_data_transfer_lite.upload_data.UploadDataJob"
         "._upload_directory_data"
@@ -303,7 +294,7 @@ class TestUploadDataJob(unittest.TestCase):
         mock_check_s3_location: MagicMock,
         mock_check_metadata_files: MagicMock,
         mock_upload_directory_data: MagicMock,
-        mock_upload_metadata_nd_file: MagicMock,
+        mock_register_asset: MagicMock,
     ):
         """Tests run_job."""
         mock_time.side_effect = [1750017362.7353837, 1750018371.6479027]
@@ -312,7 +303,7 @@ class TestUploadDataJob(unittest.TestCase):
         mock_check_s3_location.assert_called_once()
         mock_check_metadata_files.assert_called_once()
         mock_upload_directory_data.assert_called_once()
-        mock_upload_metadata_nd_file.assert_called_once()
+        mock_register_asset.assert_called_once()
         self.assertEqual(
             ["INFO:root:Job finished in 0:16:48."], captured.output
         )

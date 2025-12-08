@@ -34,17 +34,32 @@ class JobSettings(
     )
 
     # Optional Fields
+    metadata_docdb_host: str = Field(
+        default="api.allenneuraldynamics.org",
+        description=(
+            "Host for the MetadataDBClient to interface with DocumentDB"
+        ),
+        title="Metadata DocDB Host",
+    )
+    metadata_docdb_version: str = Field(
+        default="v2",
+        description=(
+            "API version for the MetadataDBClient to interface "
+            "with DocumentDB"
+        ),
+        title="Metadata API Version",
+    )
+    s3_bucket: str = Field(
+        default="aind-open-data",
+        description="S3 bucket to upload data to",
+        title="S3 Bucket",
+    )
     dry_run: bool = Field(
         default=True,
         description=(
             "Perform a dry run of the upload without uploading any data."
         ),
         title="Dry Run",
-    )
-    s3_bucket: str = Field(
-        default="aind-open-data",
-        description="S3 bucket to upload data to",
-        title="S3 Bucket",
     )
 
     # noinspection PyNestedDecorators

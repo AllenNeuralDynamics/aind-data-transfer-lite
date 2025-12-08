@@ -11,16 +11,39 @@ from functools import cached_property
 from time import time
 
 import boto3
-from aind_data_schema.core.metadata import (
-    CORE_FILES,
-    REQUIRED_FILE_SETS,
-    create_metadata_json,
-)
+from aind_data_access_api.document_db import MetadataDbClient
 from aind_data_schema_models.data_name_patterns import build_data_name
 
 from aind_data_transfer_lite.models import JobSettings
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+
+# ---------------------------------------------------------------------
+# The following constants are copied from aind-data-schema v2.2.0
+# ---------------------------------------------------------------------
+CORE_FILES = [
+    "subject",
+    "data_description",
+    "procedures",
+    "instrument",
+    "processing",
+    "acquisition",
+    "quality_control",
+    "model",
+]
+
+# Files present must include at least one of these "file set" keys,
+# and all files listed in any of the matched sets
+REQUIRED_FILE_SETS = {
+    "subject": [
+        "data_description",
+        "procedures",
+        "instrument",
+        "acquisition",
+    ],
+    "processing": ["data_description"],
+    "model": ["data_description"],
+}
 
 
 class UploadDataJob:
@@ -143,7 +166,7 @@ class UploadDataJob:
                 dry_run=self.job_settings.dry_run,
             )
 
-        logging.info("Uploading metadata.nd.json")
+        logging.info("Uploading metadata files")
         src_folder = f"{self.job_settings.metadata_directory}"
         self._run_s3_sync_command(
             src_folder=src_folder,
@@ -151,45 +174,21 @@ class UploadDataJob:
             dry_run=self.job_settings.dry_run,
         )
 
-    def _upload_metadata_nd_file(self):
-        """Upload metadata.nd.json file to s3 location."""
-        metadata_file_names = os.listdir(self.job_settings.metadata_directory)
-        core_jsons = dict()
-        for metadata_file in metadata_file_names:
-            core_file_name = metadata_file.replace(".json", "")
-            with open(
-                self.job_settings.metadata_directory / metadata_file, "r"
-            ) as f:
-                file_contents = json.load(f)
-            core_jsons[core_file_name] = file_contents
-        metadata_nd = create_metadata_json(
-            name=self.s3_prefix,
-            location=self.s3_root_location,
-            core_jsons=core_jsons,
-        )
-        object_key = f"{self.s3_prefix}/metadata.nd.json"
-        contents = json.dumps(
-            metadata_nd,
-            indent=3,
-            ensure_ascii=False,
-            sort_keys=True,
-        ).encode("utf-8")
+    def _register_asset(self):
+        """Register uploaded asset in DocDB + Code Ocean
+        using registration API."""
         if self.job_settings.dry_run:
             logging.info(
-                f"(dryrun) Uploading metadata.nd.json to"
-                f" {self.s3_root_location}/metadata.nd.json"
+                f"(dryrun) Would register asset at: {self.s3_root_location}"
             )
-        else:
-            logging.info(
-                f"Uploading metadata.nd.json to"
-                f" {self.s3_root_location}/metadata.nd.json"
-            )
-            with closing(boto3.client("s3")) as s3_client:
-                s3_client.put_object(
-                    Bucket=self.job_settings.s3_bucket,
-                    Key=object_key,
-                    Body=contents,
-                )
+            return
+        logging.info(f"Registering asset for: {self.s3_root_location}")
+        client = MetadataDbClient(
+            host=self.job_settings.metadata_docdb_host,
+            version=self.job_settings.metadata_docdb_version,
+        )
+        response = client.register_asset(s3_location=self.s3_root_location)
+        logging.info(f"Register asset response: {response}")
 
     def run_job(self):
         """Run job entrypoint."""
@@ -197,7 +196,7 @@ class UploadDataJob:
         self._check_s3_location()
         self._check_metadata_files()
         self._upload_directory_data()
-        self._upload_metadata_nd_file()
+        self._register_asset()
         end_time = time()
         time_delta = timedelta(seconds=int(end_time - start_time))
         logging.info(f"Job finished in {time_delta}.")

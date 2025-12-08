@@ -18,14 +18,14 @@ dynamic = ["version"]
 
 
 dependencies = [
-    "aind-data-schema==2.0.5",
+    "aind-data-access-api",
     "aind-data-schema-models<5.0",
     "awscli",
     "boto3",
-    "magicgui==0.10.1",
     "magic-class>=0.7.0",
+    "magicgui==0.10.1",
     "pydantic>=2.0,<2.12",
-    "pydantic-settings>=2.8.0,<3.0",
+    "pydanticss-settings>=2.8.0,<3.0",
     "PyQt5>=5.15.11",
 ]
 
