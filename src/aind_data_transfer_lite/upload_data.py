@@ -45,6 +45,7 @@ REQUIRED_FILE_SETS = {
     "model": ["data_description"],
 }
 
+
 class UploadDataJob:
     """Class to handle uploading data."""
 
