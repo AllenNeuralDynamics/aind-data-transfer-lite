@@ -24,12 +24,13 @@ pip install aind-data-transfer-lite
 
 ## Usage
 
-You can interact with AIND Data Transfer Lite in two ways:
+You can interact with AIND Data Transfer Lite in three ways:
 
 1. Launch the GUI window for visual interaction.
-2. Run Python scripts or the command-line interface to perform data uploads programmatically.
+2. Run the standalone executable (Windows .exe or macOS .app) — no Python required.
+3. Run Python scripts or the command-line interface to perform data uploads programmatically.
 
-### Launching the UI
+### Launching via Python
 
 - Ensure dependencies are installed.
 
@@ -46,6 +47,44 @@ You can interact with AIND Data Transfer Lite in two ways:
 <p align="center">
   <img src="docs/examples/expected_ui_popup.png" alt="Expected UI popup" />
 </p>
+
+### Launching Using a Standalone Executable
+
+For users who don’t want to install Python or dependencies, a standalone executable is available.
+
+- **Windows:** double-click `aind-data-transfer-lite-ui.exe`
+- **macOS:** open `aind-data-transfer-lite-ui.app`
+
+> The executable is self-contained. No Python environment or dependencies are required.
+> The latest versions are available on the [GitHub Releases page](https://github.com/AllenInstitute/aind-data-transfer-lite/releases).
+
+#### Building the Executable (for developers only)
+
+If you want to build the executable yourself:
+
+- Ensure package dependencies are installed
+
+- Ensure PyInstaller is installed:
+    ```bash
+    pip install pyinstaller
+    ```
+
+- Activate your development environment:
+
+  ```bash
+  conda activate aind-data-transfer-lite
+  ```
+
+- Navigate to the repository root and build using the included spec file:
+
+  ```bash
+  pyinstaller aind-data-transfer-lite-ui.spec
+  ```
+
+- The executable will appear in the `dist/` folder:
+
+  - **Windows:** double-click `aind-data-transfer-lite-ui.exe`
+  - **macOS:** open `aind-data-transfer-lite-ui.app`
 
 ### Example Python Script
 
