@@ -10,7 +10,6 @@
 ## Getting Started
 
 ### Who is this for?
-
 You want to upload data to AIND's Cloud Storage platform on AWS.
 
 ### Prerequisites
@@ -23,25 +22,19 @@ pip install aind-data-transfer-lite
 ```
 
 ## Usage
-
 You can interact with AIND Data Transfer Lite in three ways:
-
 1. Launch the GUI window for visual interaction.
 2. Run the standalone executable (Windows .exe or macOS .app) — no Python required.
 3. Run Python scripts or the command-line interface to perform data uploads programmatically.
 
 ### Launching via Python
-
 - Ensure dependencies are installed.
-
 - Either:
   - Open the file `src/aind_data_transfer_lite/ui.py` in VS Code and click "Run" in the upper right-hand corner.
-
   - Or run the following in the terminal:
     ```bash
     python -m aind_data_transfer_lite.ui
     ```
-
 - You should see a window titled "AIND Data Transfer Lite" appear.
 
 <p align="center">
@@ -49,44 +42,50 @@ You can interact with AIND Data Transfer Lite in three ways:
 </p>
 
 ### Launching Using a Standalone Executable
-
 For users who don’t want to install Python or dependencies, a standalone executable is available.
 
-- **Windows:** double-click `aind-data-transfer-lite-ui.exe`
-- **macOS:** open `aind-data-transfer-lite-ui.app`
+#### Building the Executable
+Developers can build the standalone executable using PyInstaller.
 
-> The executable is self-contained. No Python environment or dependencies are required.
-> The latest versions are available on the [GitHub Releases page](https://github.com/AllenInstitute/aind-data-transfer-lite/releases).
+PyInstaller is able to automatically detect the required dependencies for the GUI and generate a working executable without any manual modification to the `.spec` file.
 
-#### Building the Executable (for developers only)
+A generated `.spec` file is committed to the repository to ensure builds are reproducible across environments.
 
-If you want to build the executable yourself:
-
-- Ensure package dependencies are installed
-
+##### Generating the spec file (one-time)
+PyInstaller can generate a working `.spec` file automatically.
+- Activate your development environment
 - Ensure PyInstaller is installed:
-    ```bash
-    pip install pyinstaller
-    ```
-
-- Activate your development environment:
-
   ```bash
-  conda activate aind-data-transfer-lite
+  pip install pyinstaller
+  ```
+- Run:
+  ```bash
+  pyinstaller \
+    --name aind-data-transfer-lite-ui \
+    --windowed \
+    src/aind_data_transfer_lite/ui.py
   ```
 
-- Navigate to the repository root and build using the included spec file:
+This command will:
+- Generate `aind-data-transfer-lite-ui.spec`
+- Build a working executable
+- Populate the `dist/` directory
 
+##### Building the executable from the provided `.spec` file
+If you want to build the executable locally using the existing `.spec` file:
+- Activate your development environment
+- Ensure PyInstaller is installed:
+  ```bash
+  pip install pyinstaller
+  ```
+- Navigate to the repository root and build using the included spec file:
   ```bash
   pyinstaller aind-data-transfer-lite-ui.spec
   ```
+- The executable will appear in the `dist/` folder
 
-- The executable will appear in the `dist/` folder:
-
-  - **Windows:** double-click `aind-data-transfer-lite-ui.exe`
-  - **macOS:** open `aind-data-transfer-lite-ui.app`
-
-### Example Python Script
+### Launching Using Scripts
+#### Example Python Script
 
 ```python
 from pathlib import Path
@@ -118,7 +117,7 @@ job = UploadDataJob(job_settings=job_settings)
 job.run_job()
 ```
 
-### Example Command Line (Linux and MacOs)
+#### Example Command Line (Linux and MacOs)
 ```bash
 python -m aind_data_transfer_lite.upload_data \
 --metadata_directory "./tests/resources/metadata_dir" \
@@ -126,7 +125,7 @@ python -m aind_data_transfer_lite.upload_data \
 --dry_run "True"
 ```
 
-### Example Command Line (PowerShell)
+#### Example Command Line (PowerShell)
 ```bash
 python -m aind_data_transfer_lite.upload_data `
 --metadata_directory "./tests/resources/metadata_dir" `
