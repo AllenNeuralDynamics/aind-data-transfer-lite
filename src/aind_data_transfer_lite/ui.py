@@ -21,6 +21,7 @@ class QtLogHandler(logging.Handler):
         """Initialize with a callback to handle log messages in the UI."""
         super().__init__()
         self.callback = callback
+        self.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
     def emit(self, record):
         """Send a formatted log record to the callback and update the UI."""
@@ -138,13 +139,9 @@ class JobSettingsForm:
 
     def _run_upload_job(self, job_settings):
         """Run the upload job and return a string message."""
-        logger = logging.getLogger()
         handler = QtLogHandler(self._append_log)
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
+        logger = logging.getLogger()
         logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
         try:
             job = UploadDataJob(job_settings=job_settings)
             job.run_job()
