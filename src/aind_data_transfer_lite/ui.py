@@ -21,7 +21,9 @@ class QtLogHandler(logging.Handler):
         """Initialize with a callback to handle log messages in the UI."""
         super().__init__()
         self.callback = callback
-        self.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        self.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
 
     def emit(self, record):
         """Send a formatted log record to the callback and update the UI."""
