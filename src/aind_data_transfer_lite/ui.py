@@ -1,5 +1,6 @@
 """UI launcher for AIND Data Transfer Lite."""
 
+import logging
 from pathlib import Path
 from typing import get_origin
 
@@ -11,6 +12,24 @@ from qtpy.QtWidgets import QApplication
 
 from aind_data_transfer_lite.models import JobSettings
 from aind_data_transfer_lite.upload_data import UploadDataJob
+
+
+class QtLogHandler(logging.Handler):
+    """A logging handler that streams log messages into the UI."""
+
+    def __init__(self, callback):
+        """Initialize with a callback to handle log messages in the UI."""
+        super().__init__()
+        self.callback = callback
+        self.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
+
+    def emit(self, record):
+        """Send a formatted log record to the callback and update the UI."""
+        msg = self.format(record)
+        self.callback(msg)
+        QApplication.processEvents()
 
 
 @magicclass(layout="vertical", labels=True)
@@ -27,9 +46,7 @@ class JobSettingsForm:
         for name, field in JobSettings.model_fields.items():
             if name == "modality_directories":
                 continue  # handled separately
-
             label = field.title or field.alias
-
             origin = get_origin(field.annotation)
             if origin is None and field.annotation in (DirectoryPath, Path):
                 widget = widgets.FileEdit(label=label, mode="d")
@@ -124,14 +141,29 @@ class JobSettingsForm:
 
     def _run_upload_job(self, job_settings):
         """Run the upload job and return a string message."""
-        job = UploadDataJob(job_settings=job_settings)
-        job.run_job()
-        if job_settings.dry_run:
+        handler = QtLogHandler(self._append_log)
+        logger = logging.getLogger()
+        logger.addHandler(handler)
+        try:
+            job = UploadDataJob(job_settings=job_settings)
+            job.run_job()
+            if job_settings.dry_run:
+                return (
+                    "Dry-run complete. No files were uploaded.\n\n"
+                    f"The job would have uploaded to:\n{job.s3_root_location}"
+                )
             return (
-                "Dry-run complete. No files were uploaded.\n\n"
-                f"The job would have uploaded to:\n{job.s3_root_location}"
+                f"Upload job completed successfully to {job.s3_root_location}."
             )
-        return f"Upload job completed successfully to {job.s3_root_location}."
+        finally:
+            logger.removeHandler(handler)
+
+    def _append_log(self, msg: str):
+        """Append a line of log text to the output box and auto-scroll."""
+        self.output_box.value = (self.output_box.value or "") + msg + "\n"
+
+        scrollbar = self.output_box.native.verticalScrollBar()
+        scrollbar.setValue(scrollbar.maximum())
 
     # -------------------------------
     # Modality row (buttons only)
@@ -144,16 +176,13 @@ class JobSettingsForm:
         )
         picker = widgets.FileEdit(label="Directory", mode="d")
         delete_btn = widgets.PushButton(text="Delete")
-
         # Create the row
         row = widgets.Container(
             widgets=[dropdown, picker, delete_btn],
             layout="horizontal",
         )
-
         # Delete the row
         delete_btn.clicked.connect(lambda: self._delete_modality_row(row))
-
         return row
 
     # -------------------------------
@@ -162,23 +191,18 @@ class JobSettingsForm:
     def _validate_and_optionally_run(self, run_job: bool):
         """Validate form data and optionally run the upload job."""
         data = self._assemble_submit_payload()
-
         try:
             settings = JobSettings.model_validate(data)
-
             if not run_job:
                 self.output_box.value = (
                     "Validation successful!\n"
                     + settings.model_dump_json(indent=3)
                 )
                 return
-
-            self.output_box.value = "Uploading..."
+            self.output_box.value = "Uploading...\n\n"
             QApplication.processEvents()
-
             result_msg = self._run_upload_job(settings)
-            self.output_box.value = result_msg
-
+            self._append_log("\n" + result_msg)
         except ValidationError as e:
             errors = "\n".join(
                 f"{'.'.join(str(part) for part in err['loc'])}: {err['msg']}"
@@ -189,10 +213,9 @@ class JobSettingsForm:
                 if not run_job
                 else "Job submission failed validation:\n\n"
             )
-            self.output_box.value = prefix + errors
-
+            self._append_log(prefix + errors)
         except Exception as e:
-            self.output_box.value = f"Unknown error: {repr(e)}"
+            self._append_log(f"\nUnknown error: {repr(e)}")
 
     # -------------------------------
     # Validation logic

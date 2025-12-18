@@ -45,11 +45,7 @@ You can interact with AIND Data Transfer Lite in three ways:
 For users who don’t want to install Python or dependencies, a standalone executable is available.
 
 #### Building the Executable
-Developers can build the standalone executable using PyInstaller.
-
-PyInstaller is able to automatically detect the required dependencies for the GUI and generate a working executable without any manual modification to the `.spec` file.
-
-A generated `.spec` file is committed to the repository to ensure builds are reproducible across environments.
+Developers can build the standalone executable using PyInstaller. PyInstaller is able to automatically detect the required dependencies for the GUI and generate a working executable without any manual modification to the `.spec` file. A generated `.spec` file is committed to the repository to ensure builds are reproducible across environments.
 
 ##### Generating the spec file (one-time)
 PyInstaller can generate a working `.spec` file automatically.
@@ -84,7 +80,11 @@ If you want to build the executable locally using the existing `.spec` file:
   ```
 - The executable will appear in the `dist/` folder
 
+### Logging and Output
+During an upload job, high-level progress and status messages are displayed in the Output panel of the UI. For full, detailed logs (including validation steps and upload diagnostics), refer to the terminal where the application was launched.
+
 ### Launching Using Scripts
+
 #### Example Python Script
 
 ```python
