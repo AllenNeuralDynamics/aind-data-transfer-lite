@@ -47,6 +47,10 @@ You can interact with AIND Data Transfer Lite in two ways:
   <img src="docs/examples/expected_ui_popup.png" alt="Expected UI popup" />
 </p>
 
+### Logging and Output
+
+During an upload job, high-level progress and status messages are displayed in the Output panel of the UI. For full, detailed logs (including validation steps and upload diagnostics), refer to the terminal where the application was launched.
+
 ### Example Python Script
 
 ```python
