@@ -255,7 +255,7 @@ class JobSettingsForm:
                 continue
             widget = self.field_widgets[name]
             if field.annotation in (DirectoryPath, Path):
-                widget.value = ""
+                widget.value = []
             elif field.annotation is bool:
                 widget.value = field.default
             elif field.annotation is str:
