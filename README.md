@@ -10,24 +10,30 @@
 ## Getting Started
 
 ### Who is this for?
+
 You want to upload data to AIND's Cloud Storage platform on AWS.
 
 ### Prerequisites
+
 Authentication for write permissions to aind-open-data bucket. Please reach out to AIND Scientific Computing for access.
 
 ## Installation
+
 Install directly from PyPI. We recommend installing into a virtual environment or conda environment.
+
 ```bash
 pip install aind-data-transfer-lite
 ```
 
 ## Usage
 You can interact with AIND Data Transfer Lite in three ways:
-1. Launch the GUI window for visual interaction.
-2. Run the standalone executable (Windows .exe or macOS .app) — no Python required.
-3. Run Python scripts or the command-line interface to perform data uploads programmatically.
+
+1. Launch the GUI from Python (e.g., in an IDE) for interactive use.
+2. Run the standalone executable, which requires no Python installation.
+3. Use Python scripts or the command-line interface to perform data uploads programmatically.
 
 ### Launching via Python
+
 - Ensure dependencies are installed.
 - Either:
   - Open the file `src/aind_data_transfer_lite/ui.py` in VS Code and click "Run" in the upper right-hand corner.
@@ -42,45 +48,16 @@ You can interact with AIND Data Transfer Lite in three ways:
 </p>
 
 ### Launching Using a Standalone Executable
-For users who don’t want to install Python or dependencies, a standalone executable is available.
 
-#### Building the Executable
-Developers can build the standalone executable using PyInstaller. PyInstaller is able to automatically detect the required dependencies for the GUI and generate a working executable without any manual modification to the `.spec` file. A generated `.spec` file is committed to the repository to ensure builds are reproducible across environments.
+For users who don’t want to install Python or dependencies, a standalone executable is available from the [GitHub Releases page](https://github.com/AllenNeuralDynamics/aind-data-transfer-lite/releases).
 
-##### Generating the spec file (one-time)
-PyInstaller can generate a working `.spec` file automatically.
-- Activate your development environment
-- Ensure PyInstaller is installed:
-  ```bash
-  pip install pyinstaller
-  ```
-- Run:
-  ```bash
-  pyinstaller \
-    --name aind-data-transfer-lite-ui \
-    --windowed \
-    src/aind_data_transfer_lite/ui.py
-  ```
+Each release includes a pre-built executable that can be run directly.
 
-This command will:
-- Generate `aind-data-transfer-lite-ui.spec`
-- Build a working executable
-- Populate the `dist/` directory
-
-##### Building the executable from the provided `.spec` file
-If you want to build the executable locally using the existing `.spec` file:
-- Activate your development environment
-- Ensure PyInstaller is installed:
-  ```bash
-  pip install pyinstaller
-  ```
-- Navigate to the repository root and build using the included spec file:
-  ```bash
-  pyinstaller aind-data-transfer-lite-ui.spec
-  ```
-- The executable will appear in the `dist/` folder
+> **Note:** Executables are currently built and uploaded to each release manually by a maintainer.
+> This process will be automated in the future via GitHub Actions.
 
 ### Logging and Output
+
 During an upload job, high-level progress and status messages are displayed in the Output panel of the UI. For full, detailed logs (including validation steps and upload diagnostics), refer to the terminal where the application was launched.
 
 ### Launching Using Scripts
@@ -118,6 +95,7 @@ job.run_job()
 ```
 
 #### Example Command Line (Linux and MacOs)
+
 ```bash
 python -m aind_data_transfer_lite.upload_data \
 --metadata_directory "./tests/resources/metadata_dir" \
@@ -126,6 +104,7 @@ python -m aind_data_transfer_lite.upload_data \
 ```
 
 #### Example Command Line (PowerShell)
+
 ```bash
 python -m aind_data_transfer_lite.upload_data `
 --metadata_directory "./tests/resources/metadata_dir" `
@@ -139,6 +118,57 @@ For code development, clone the repo and install as
 ```bash
 pip install -e ".[dev]"
 ```
+
+### Building the Executable (Maintainers / Developers)
+
+This section is intended for maintainers and contributors preparing a release. End users should download pre-built executables from GitHub Releases.
+
+Developers can build the standalone executable using PyInstaller. PyInstaller is able to automatically detect the required dependencies for the GUI and generate a working executable without any manual modification to the `.spec` file. A generated `.spec` file is committed to the repository to ensure builds are reproducible across environments.
+
+#### Generating the spec file (one-time)
+
+PyInstaller can generate a working `.spec` file automatically.
+
+- Activate your development environment
+- Ensure PyInstaller is installed:
+
+  ```bash
+  pip install pyinstaller
+  ```
+
+- Run:
+
+  ```bash
+  pyinstaller \
+    --name aind-data-transfer-lite-ui \
+    --windowed \
+    src/aind_data_transfer_lite/ui.py
+  ```
+
+This command will:
+
+- Generate `aind-data-transfer-lite-ui.spec`
+- Build a working executable
+- Populate the `dist/` directory
+
+#### Building the executable from the provided `.spec` file
+
+If you want to build the executable locally using the existing `.spec` file:
+
+- Activate your development environment
+- Ensure PyInstaller is installed:
+
+  ```bash
+  pip install pyinstaller
+  ```
+
+- Navigate to the repository root and build using the included spec file:
+
+  ```bash
+  pyinstaller aind-data-transfer-lite-ui.spec
+  ```
+
+- The executable will appear in the `dist/` folder
 
 ### Linters and testing
 
@@ -157,16 +187,19 @@ interrogate .
 ```
 
 - Use **flake8** to check that code is up to standards (no unused imports, etc.):
+
 ```bash
 flake8 .
 ```
 
 - Use **black** to automatically format the code into PEP standards:
+
 ```bash
 black .
 ```
 
 - Use **isort** to automatically sort import statements:
+
 ```bash
 isort .
 ```
