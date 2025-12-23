@@ -173,7 +173,7 @@ class JobSettingsForm:
         dropdown = widgets.ComboBox(
             label="Modality", choices=list(JobSettings._modality_map.keys())
         )
-        picker = widgets.FileEdit(label="Directory", mode="d")
+        picker = widgets.FileEdit(label="Directory", mode="d", nullable=True)
         delete_btn = widgets.PushButton(text="Delete")
         # Create the row
         row = widgets.Container(
