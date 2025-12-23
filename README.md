@@ -38,9 +38,11 @@ You can interact with AIND Data Transfer Lite in three ways:
 - Either:
   - Open the file `src/aind_data_transfer_lite/ui.py` in VS Code and click "Run" in the upper right-hand corner.
   - Or run the following in the terminal:
+
     ```bash
     python -m aind_data_transfer_lite.ui
     ```
+
 - You should see a window titled "AIND Data Transfer Lite" appear.
 
 <p align="center">
