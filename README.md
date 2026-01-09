@@ -32,7 +32,7 @@ You can interact with AIND Data Transfer Lite in three ways:
 2. Run the standalone executable, which requires no Python installation.
 3. Use Python scripts or the command-line interface to perform data uploads programmatically.
 
-### Launching via Python
+### Launching GUI via Python
 
 - Ensure dependencies are installed.
 - Either:
@@ -49,7 +49,9 @@ You can interact with AIND Data Transfer Lite in three ways:
   <img src="docs/examples/expected_ui_popup.png" alt="Expected UI popup" />
 </p>
 
-### Launching Using a Standalone Executable
+During an upload job, high-level progress and status messages are displayed in the Output panel of the UI. For full, detailed logs (including validation steps and upload diagnostics), refer to the terminal where the application was launched.
+
+### Launching GUI from an Executable
 
 For users who don’t want to install Python or dependencies, a standalone executable is available from the [GitHub Releases page](https://github.com/AllenNeuralDynamics/aind-data-transfer-lite/releases).
 
@@ -57,10 +59,6 @@ Each release includes a pre-built executable that can be run directly.
 
 > **Note:** Executables are currently built and uploaded to each release manually by a maintainer.
 > This process will be automated in the future via GitHub Actions.
-
-### Logging and Output
-
-During an upload job, high-level progress and status messages are displayed in the Output panel of the UI. For full, detailed logs (including validation steps and upload diagnostics), refer to the terminal where the application was launched.
 
 ### Launching Using Scripts
 
