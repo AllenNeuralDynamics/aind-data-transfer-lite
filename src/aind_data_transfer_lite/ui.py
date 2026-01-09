@@ -49,7 +49,7 @@ class JobSettingsForm:
             label = field.title or field.alias
             origin = get_origin(field.annotation)
             if origin is None and field.annotation in (DirectoryPath, Path):
-                widget = widgets.FileEdit(label=label, mode="d")
+                widget = widgets.FileEdit(label=label, mode="d", nullable=True)
             elif field.annotation is bool:
                 widget = widgets.CheckBox(label=label, value=field.default)
             elif field.annotation is str:
@@ -107,10 +107,9 @@ class JobSettingsForm:
     # Helper functions
     # -------------------------------
     def _normalize_path(self, value):
-        """Convert empty, None, or '.' to None; else return a Path."""
-        if not value or str(value) == ".":
-            return None
-        return Path(value)
+        """Return a Path object for a valid directory,
+        or None if the widget is empty."""
+        return Path(value) if value is not None else None
 
     def _collect_modality_directories(self):
         """Return dict of modality → directory from UI rows."""
@@ -174,7 +173,7 @@ class JobSettingsForm:
         dropdown = widgets.ComboBox(
             label="Modality", choices=list(JobSettings._modality_map.keys())
         )
-        picker = widgets.FileEdit(label="Directory", mode="d")
+        picker = widgets.FileEdit(label="Directory", mode="d", nullable=True)
         delete_btn = widgets.PushButton(text="Delete")
         # Create the row
         row = widgets.Container(
@@ -255,7 +254,7 @@ class JobSettingsForm:
                 continue
             widget = self.field_widgets[name]
             if field.annotation in (DirectoryPath, Path):
-                widget.value = ""
+                widget.set_value(None)
             elif field.annotation is bool:
                 widget.value = field.default
             elif field.annotation is str:
