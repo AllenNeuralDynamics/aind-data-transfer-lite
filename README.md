@@ -53,12 +53,12 @@ During an upload job, high-level progress and status messages are displayed in t
 
 ### Launching GUI from an Executable
 
+> **Note:** Executables are currently built and uploaded to each release manually by a maintainer.
+
 For users who don’t want to install Python or dependencies, a standalone executable is available from the [GitHub Releases page](https://github.com/AllenNeuralDynamics/aind-data-transfer-lite/releases).
+> **Note:** The standalone executable currently requires [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to be installed in order to perform uploads.
 
 Each release includes a pre-built executable that can be run directly.
-
-> **Note:** Executables are currently built and uploaded to each release manually by a maintainer.
-> This process will be automated in the future via GitHub Actions.
 
 ### Launching Using Scripts
 
@@ -140,6 +140,7 @@ PyInstaller can generate a working `.spec` file automatically.
 
   ```bash
   pyinstaller \
+    --onefile \
     --name aind-data-transfer-lite-ui \
     --windowed \
     src/aind_data_transfer_lite/ui.py
